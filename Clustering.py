@@ -34,37 +34,6 @@ def knn(img, iter, k):
             # 求一列均值，这样mean_r ,mean_g_, mean_b, mean_label,一次循环得到(1,4)
     #print("cluster_center:",cluster_center)
     return cluster_center, img_new
- 
-def get_img(HSI_info, band1, band2, band3):
-    samples =  HSI_info[0]
-    lines = HSI_info[1]
-    channels = HSI_info[2]
-    HSI = HSI_info[3]
-    HSI_npArray = np.array(HSI)
-    img = np.zeros((lines,samples,3))
-    # Show RGB img
-    #Window = int(channels/30) # Default value: 10
-    Window = 10
-    '''
-    for i in range(lines):
-        for j in range(samples):
-            for k in range(2*Window):
-                img[i][j][0] += int(HSI[i][band1-Window+k][j]*256/4096)
-                img[i][j][1] += int(HSI[i][band2-Window+k][j]*256/4096)
-                img[i][j][2] += int(HSI[i][band3-Window+k][j]*256/4096)
-            img[i][j][0] /= 2*Window
-            img[i][j][1] /= 2*Window
-            img[i][j][2] /= 2*Window
-    '''
-    for k in range(2*Window):
-        img[:,:,0] += HSI_npArray[:,band1-Window+k,:]
-        img[:,:,1] += HSI_npArray[:,band2-Window+k,:]
-        img[:,:,2] += HSI_npArray[:,band3-Window+k,:]
-    img[:,:,0] /= 2*Window 
-    img[:,:,1] /= 2*Window
-    img[:,:,2] /= 2*Window
-    
-    return img
 
 
 if __name__ == "__main__":

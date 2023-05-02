@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 import re
-import matplotlib.pyplot as plt
+
 global data
 global samples, lines, channels
 
@@ -9,17 +9,40 @@ def ReadData():
     global samples, lines, channels
     data = []
     ### Read .hdr file to store the infomation
-    with open("M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/2023-01-06-10-56-46.hdr") as hdr_file:
+    with open("M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/wave.hdr") as hdr_file:
         for num, line in enumerate(hdr_file):
             data.append(line.split(" "))
+    # print(data)
+    wavelengths= []
+    waveFlag = 0
+    for row in range(len(data)):
+        if data[row][0] == 'lines':
+            lines = int(re.findall("\d{4}",data[row][1])[0])
+            continue
+        if data[row][0] == 'samples':
+            samples = int(re.findall("\d{3}",data[row][2])[0])
+            continue
+        if data[row][0] == 'bands':
+            channels = int(re.findall("\d{3}",data[row][2])[0])
+            continue
+        if data[row][0] == "wavelength" and data[row][1] != "units":
+            str = data[row][2]
+            str = str.replace("{","")
+            str = str.replace("\n","")
+            wavelengths.append(str)
+            waveFlag = 1
+            continue
+        if waveFlag == 1:
+            str = ','.join(data[row])
+            str = str.replace("\n","")
+            str = str.replace("}","")
+            wavelengths.append(str)
+    raw = ""
+    wavelengths = raw.join(wavelengths)
+    wavelengths = wavelengths.split(",")
+    #print(wavelengths)
+    
 
-    for foo in data:
-        if foo[0] == 'lines':
-            lines = int(re.findall("\d{4}",foo[1])[0])
-        if foo[0] == 'samples':
-            samples = int(re.findall("\d{3}",foo[2])[0])
-        if foo[0] == 'bands':
-            channels = int(re.findall("\d{3}",foo[2])[0])
     ### Read .spe file
     # Load file and reshape
     imgs = np.fromfile('M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/2023-01-06-10-56-46.spe', dtype=np.int16).reshape(lines,channels,samples)
@@ -29,20 +52,22 @@ def ReadData():
     print("The width of imgs is",samples)
     print("The length of bands",channels)
     #print(imgs.shape)
-    return samples, lines, channels, imgs
+    return lines, channels, samples, imgs, wavelengths
 
-
-# Plotting
-
-if __name__ == "__main__":
-    imgs = ReadData()
-    #print(imgs)
+def drawImg(HSI, filename):
     newimg = Image.new('RGB',(samples,lines))
-
     for i in range(lines):
         for j in range (samples):
-            newimg.putpixel((j,i),((int(imgs[i][105][j])),(int(imgs[i][59][j])),(int(imgs[i][34][j]))))
-    newimg.save("2023-01-06-10-56-46.jpg")
+            newimg.putpixel((j,i),((int(HSI[i][110][j]*256/4095)),(int(HSI[i][61][j]*256/4096)),(int(HSI[i][35][j]*256/4096))))
+    fileName = "figures/" + filename + ".jpg"
+    newimg.save(fileName)
+
+# Plotting
+if __name__ == "__main__":
+    HSI = ReadData()[3]
+    #print(imgs)
+    drawImg(HSI, "Original")
+
 
 
 
