@@ -10,7 +10,7 @@ import RemoveSD
 
 
 def calImgSpecMean(HSI,proportion):
-    return HSI.mean(axis=(0,2)) * proportion
+    return HSI.mean(axis=(0,2))
 
 def calcPhenotypeParas(reflectances):
     NDVI = (reflectances[map_band["band800"]] - reflectances[map_band["band680"]]) / (reflectances[map_band["band800"]] + reflectances[map_band["band680"]])
@@ -18,8 +18,7 @@ def calcPhenotypeParas(reflectances):
     PSSRa = reflectances[map_band["band800"]] / reflectances[map_band["band680"]]
     PSSRb = reflectances[map_band["band800"]] / reflectances[map_band["band635"]]
     PRI = (reflectances[map_band["band570"]] - reflectances[map_band["band531"]]) / (reflectances[map_band["band570"]] + reflectances[map_band["band531"]])
-    #MTVI2 = 1.5 * (1.2 * (reflectances[map_band["band800"]] - reflectances[map_band["band550"]]) - 2.5 * (reflectances[map_band["band670"]] - reflectances[map_band["band550"]])) / math.sqrt(abs((2 * reflectances[map_band["band800"]]+1)*2 - (6*reflectances[map_band["band800"]]-5*math.sqrt(reflectances[map_band["band670"]])-0.5)))
-    MTVI2 = 0
+    MTVI2 = 1.5 * (1.2 * (reflectances[map_band["band800"]] - reflectances[map_band["band550"]]) - 2.5 * (reflectances[map_band["band670"]] - reflectances[map_band["band550"]])) / math.sqrt(((2 * reflectances[map_band["band800"]]+1)*2 - (6*reflectances[map_band["band800"]]-5*math.sqrt(reflectances[map_band["band670"]]))-0.5))
     PhenotypeParas = [NDVI, OSAVI, PSSRa, PSSRb, PRI, MTVI2]
     
     return PhenotypeParas
@@ -60,7 +59,7 @@ def exportPhenotypeParas(Readfilename):
         
     f.close()
 
-    with open("Results/Phenotype_Paras_new.csv","w",newline='') as f:
+    with open("Results/Phenotype_Paras_nonew.csv","w",newline='') as f:
         writer = csv.writer(f)
         writer.writerow(FirstRow)
         writer.writerow(PhenotypeParas)

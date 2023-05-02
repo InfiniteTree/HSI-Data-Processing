@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-import getPlant
+import RemoveBG
 import ReadData
 
 def knn(img, iter, k):
@@ -34,6 +34,26 @@ def knn(img, iter, k):
             # 求一列均值，这样mean_r ,mean_g_, mean_b, mean_label,一次循环得到(1,4)
     #print("cluster_center:",cluster_center)
     return cluster_center, img_new
+ 
+def get_img(HSI_info, band1, band2, band3):
+    samples =  HSI_info[0]
+    lines = HSI_info[1]
+    channels = HSI_info[2]
+    HSI = HSI_info[3]
+    HSI_npArray = np.array(HSI)
+    img = np.zeros((lines,samples,3))
+    # Show RGB img
+    #Window = int(channels/30) # Default value: 10
+    Window = 10
+    for k in range(2*Window):
+        img[:,:,0] += HSI_npArray[:,band1-Window+k,:]
+        img[:,:,1] += HSI_npArray[:,band2-Window+k,:]
+        img[:,:,2] += HSI_npArray[:,band3-Window+k,:]
+    img[:,:,0] /= 2*Window 
+    img[:,:,1] /= 2*Window
+    img[:,:,2] /= 2*Window
+    
+    return img
 
 
 if __name__ == "__main__":
@@ -41,7 +61,7 @@ if __name__ == "__main__":
     channels = HSI_info[2]
     print("---------------Start to get the Single img channel------------------\n")
     img = get_img(HSI_info,110,61,35)
-    plantPos = getPlant.getPlant_pos(HSI_info) # a list of plant position
+    plantPos = RemoveBG.getPlant_pos(HSI_info) # a list of plant position
     '''
     print("---------------Start to get the background Pos-----------------\n")
     for i in range(HSI_info[0]):
