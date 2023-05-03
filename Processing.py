@@ -10,7 +10,7 @@ import RemoveSD
 
 
 def calImgSpecMean(HSI,proportion):
-    return HSI.mean(axis=(0,2))
+    return HSI.mean(axis=(0,2)) / proportion
 
 def calcPhenotypeParas(reflectances):
     NDVI = (reflectances[map_band["band800"]] - reflectances[map_band["band680"]]) / (reflectances[map_band["band800"]] + reflectances[map_band["band680"]])
@@ -18,7 +18,8 @@ def calcPhenotypeParas(reflectances):
     PSSRa = reflectances[map_band["band800"]] / reflectances[map_band["band680"]]
     PSSRb = reflectances[map_band["band800"]] / reflectances[map_band["band635"]]
     PRI = (reflectances[map_band["band570"]] - reflectances[map_band["band531"]]) / (reflectances[map_band["band570"]] + reflectances[map_band["band531"]])
-    MTVI2 = 1.5 * (1.2 * (reflectances[map_band["band800"]] - reflectances[map_band["band550"]]) - 2.5 * (reflectances[map_band["band670"]] - reflectances[map_band["band550"]])) / math.sqrt(((2 * reflectances[map_band["band800"]]+1)*2 - (6*reflectances[map_band["band800"]]-5*math.sqrt(reflectances[map_band["band670"]]))-0.5))
+    #MTVI2 = 1.5 * (1.2 * (reflectances[map_band["band800"]] - reflectances[map_band["band550"]]) - 2.5 * (reflectances[map_band["band670"]] - reflectances[map_band["band550"]])) / math.sqrt(((2 * reflectances[map_band["band800"]]+1)*2 - (6*reflectances[map_band["band800"]]-5*math.sqrt(reflectances[map_band["band670"]]))-0.5))
+    MTVI2 = 0
     PhenotypeParas = [NDVI, OSAVI, PSSRa, PSSRb, PRI, MTVI2]
     
     return PhenotypeParas
@@ -42,7 +43,6 @@ def HyperspectraCurve(HSI,wavelengths, proportion):
         writer.writerow(FirstRow)
         # Write the remaining rows
         writer.writerow(spec_mean)
-    f.close()
 
     return curveFile
 
@@ -56,41 +56,39 @@ def exportPhenotypeParas(Readfilename):
         #print(reflectances)
         reflectances = [float(num) for num in reflectances] # change str to float
         PhenotypeParas= calcPhenotypeParas(reflectances)
-        
-    f.close()
 
     with open("Results/Phenotype_Paras_nonew.csv","w",newline='') as f:
         writer = csv.writer(f)
         writer.writerow(FirstRow)
         writer.writerow(PhenotypeParas)
-    f.close()
     return
 
 if __name__ == "__main__":
-    HSI_info = ReadData.ReadData()
+    HSI_info = ReadData.Read()
     wavelengths = HSI_info[4]
     lines = HSI_info[0]
     channels= HSI_info[1]
     samples = HSI_info[2]
+    PixelSum = lines * samples
+
     ### Level 1
     Level_1 = RemoveBG.getPlantPos(HSI_info)
-    HSI = Level_1[0]
+    HSI_1 = Level_1[0]
     BG_Counter = Level_1[2]
 
     ### Level 2
     set_value = [0, 0, 0]
-    HSI_info_new = [lines, channels, samples, HSI]
-    Level_2 = RemoveSD.RemoveSD(HSI_info_new,set_value)
-    HSI = Level_2[0]
+    HSI_info_new = [lines, channels, samples, HSI_1]
+    cur_proportion = float((PixelSum - BG_Counter)/PixelSum)
+    Level_2 = RemoveSD.RemoveSD(HSI_info_new,set_value, cur_proportion)
+    HSI_2 = Level_2[0]
     SD_Counter = Level_2[1]
-    
-    PixelSum = lines * samples
-    
-    proportion = (PixelSum - SD_Counter - BG_Counter)/PixelSum
+
+    proportion = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
     print("PixelSum is",PixelSum)
     print("SD_Counter is",SD_Counter)
     print("BG_Counter is",BG_Counter)
     print("The remaining proportion is ",proportion)
     
-    curve_file = HyperspectraCurve(HSI, wavelengths, proportion)
+    curve_file = HyperspectraCurve(HSI_2, wavelengths, proportion)
     exportPhenotypeParas(curve_file)
