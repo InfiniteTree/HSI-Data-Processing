@@ -1,2 +1,5 @@
 # m-CTP-Data-Processing
-Data Processing on the data of m-CTP
+Data processing on the hyperspectra data of m-CTP
+
+### Package Requirement:
+Scipy, Pillow, Regex
