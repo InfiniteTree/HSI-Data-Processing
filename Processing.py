@@ -91,4 +91,5 @@ if __name__ == "__main__":
     print("The remaining proportion is ",proportion_2)
     
     curve_file = HyperspectraCurve(HSI_2, wavelengths, proportion_2)
+    
     exportPhenotypeParas(curve_file)
