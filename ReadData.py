@@ -3,10 +3,14 @@ from PIL import Image
 import re
 
 def Read():
-    HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/wave.hdr",'M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/2023-01-06-10-56-46.spe')
+    HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/wave.hdr",'M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/2023-01-06-10-56-46.spe', 1)
     return HSI_info
 
-def ReadData(hdrfileName,spefileName):
+def ReadRef():
+    HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/TeeSapling/wave.hdr",'M:/m-CTP_DATA/2023.1.9/TeeSapling//2022-07-27-06-32.spe', 0)
+    return HSI_info
+
+def ReadData(hdrfileName,spefileName, flag):
     data = []
     ### Read .hdr file to store the infomation
     with open(hdrfileName) as hdr_file:
@@ -18,7 +22,10 @@ def ReadData(hdrfileName,spefileName):
     for row in range(len(data)):
         if data[row][0] == 'lines':
             #lines = int(re.findall("\d{4}",data[row][2])[0])
-            lines = int(192960000/300/480)
+            if (flag==0):
+                lines = int(195840000/300/480)
+            if (flag==1):
+                lines = int(192960000/300/480)
             continue
         if data[row][0] == 'samples':
             samples = int(re.findall("\d{3}",data[row][2])[0])
@@ -71,10 +78,10 @@ def drawImg(HSI_info, filename):
 
 # Plotting
 if __name__ == "__main__":
-    HSI_info = Read()
+    HSI_info = ReadRef()
     #print(imgs)
     
-    drawImg(HSI_info, "Original_retry")
+    drawImg(HSI_info, "Original_Tee")
 
 
 

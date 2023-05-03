@@ -75,20 +75,20 @@ if __name__ == "__main__":
     Level_1 = RemoveBG.getPlantPos(HSI_info)
     HSI_1 = Level_1[0]
     BG_Counter = Level_1[2]
+    proportion_1 = float((PixelSum - BG_Counter)/PixelSum)
 
     ### Level 2
     set_value = [0, 0, 0]
     HSI_info_new = [lines, channels, samples, HSI_1]
-    cur_proportion = float((PixelSum - BG_Counter)/PixelSum)
-    Level_2 = RemoveSD.RemoveSD(HSI_info_new,set_value, cur_proportion)
+    
+    Level_2 = RemoveSD.RemoveSD(HSI_info_new,set_value, proportion_1)
     HSI_2 = Level_2[0]
     SD_Counter = Level_2[1]
-
-    proportion = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
+    proportion_2 = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
     print("PixelSum is",PixelSum)
     print("SD_Counter is",SD_Counter)
     print("BG_Counter is",BG_Counter)
-    print("The remaining proportion is ",proportion)
+    print("The remaining proportion is ",proportion_2)
     
-    curve_file = HyperspectraCurve(HSI_2, wavelengths, proportion)
+    curve_file = HyperspectraCurve(HSI_2, wavelengths, proportion_2)
     exportPhenotypeParas(curve_file)
