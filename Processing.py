@@ -7,6 +7,7 @@ import ReadData
 from RemoveBG import map_band 
 import RemoveBG
 import RemoveSD
+from setting import map_band
 
 
 def calImgSpecMean(HSI,proportion):
@@ -25,24 +26,40 @@ def calcPhenotypeParas(reflectances):
     return PhenotypeParas
 
 # export file 1 to store the spectra data  
-def HyperspectraCurve(HSI,wavelengths, proportion):
+def HyperspectraCurve(HSI_info, proportion, avg_flag):
     # Show the spectra curve
-    spec_mean = calImgSpecMean(HSI,proportion)
-    x = [float(num) for num in wavelengths] # change str to float
-    y = np.array(spec_mean)
-    plt.plot(x,y,c='lightcoral',label='Curve_poly_Fit')
-    plt.savefig("Results/Hyperspec_curve.jpg")
+    wavelengths = HSI_info[4]
+    lines = HSI_info[0]
+    channels= HSI_info[1]
+    samples = HSI_info[2]
+    HSI = HSI_info[3]
+    if avg_flag == 1:
+        spec_mean = calImgSpecMean(HSI,proportion)
+        x = [float(num) for num in wavelengths] # change str to float
+        y = np.array(spec_mean)
+        plt.plot(x,y,c='lightcoral',label='Curve_poly_Fit')
+        plt.savefig("Results/Hyperspec_curve.jpg")
+        remainRow = spec_mean
+    elif avg_flag == 0 :
+        remainRow = []
+        
+ 
     #plt.show()
 
     # Export the data of hyperspectra curve into the local .csv
     FirstRow = wavelengths
+    
     curveFile = "Results/Hyperspectra_curve.csv"
     with open(curveFile,"w",newline='') as f:
         writer = csv.writer(f)
         # Write the first row
         writer.writerow(FirstRow)
         # Write the remaining rows
-        writer.writerow(spec_mean)
+        if avg_flag == 1:
+            writer.writerow(remainRow)
+        elif avg_flag == 0:
+            for i in range(samples*lines):
+                writer.writerow(remainRow[i])
 
     return curveFile
 
@@ -75,14 +92,15 @@ if __name__ == "__main__":
     Level_1 = RemoveBG.getPlantPos(HSI_info)
     HSI_1 = Level_1[0]
     BG_Counter = Level_1[2]
-    proportion_1 = float((PixelSum - BG_Counter)/PixelSum)
+    proportion_1 = float((PixelSum - BG_Counter)/PixelSum)  
+    HSI_info_L1 = [lines, channels, samples, HSI_1]
 
     ### Level 2
     set_value = [0, 0, 0]
-    HSI_info_new = [lines, channels, samples, HSI_1]
-    
-    Level_2 = RemoveSD.RemoveSD(HSI_info_new,set_value, proportion_1)
+    Level_2 = RemoveSD.RemoveSD(HSI_info_L1,set_value, proportion_1)
     HSI_2 = Level_2[0]
+    HSI_info_L2 = [lines, channels, samples, HSI_2]
+
     SD_Counter = Level_2[1]
     proportion_2 = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
     print("PixelSum is",PixelSum)
@@ -90,6 +108,6 @@ if __name__ == "__main__":
     print("BG_Counter is",BG_Counter)
     print("The remaining proportion is ",proportion_2)
     
-    curve_file = HyperspectraCurve(HSI_2, wavelengths, proportion_2)
+    curve_file = HyperspectraCurve(HSI_info_L2, proportion_2)
     
     exportPhenotypeParas(curve_file)

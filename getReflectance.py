@@ -72,12 +72,12 @@ def getReflectEquation():
     refSample1= mapRef(RefAmplititudes_file, "RefBoard/3Ref.csv", 1)
     X1 = refSample1[0]
     Y1 = refSample1[1]
-    
+    '''
     print("-----------------X1-------------------")
     print(X1)
     print("-----------------Y1-------------------")
     print(Y1)
-    
+    '''
     #print("------------30Ref----------")
 
     refSample2 = mapRef(RefAmplititudes_file, "RefBoard/30Ref.csv", 2)
@@ -93,17 +93,17 @@ def getReflectEquation():
 
     # get the vector of k and b
     num = len(X2)
-
     k, b = [], []
+
     for i in range(num):
         k.append((Y2[i] - Y1[i]) / (X2[i] - X1[i]))
-        b.append(Y2[i] - k[i]*X2[i])
-    '''
+        b.append(Y1[i] - k[i]*X1[i])
+    
     print("-----------------k-------------------")
     print(k)
     print("-----------------b-------------------")
     print(b)
-    '''
+    
     # Now length of k, b is 57
     # we need 300 k,b
     # For the rest of k,b we can use interpolation algorithm to get the rest of them
@@ -193,11 +193,14 @@ if __name__ == "__main__":
     #getReflectance(HSI_info)
     HSI_2 = Level_2[0]
     HSI_info_L2 = [lines, channels, samples, HSI_2,  wavelengths]
+    # Draw the img
+    ReadData.drawImg(HSI_info_L2, "RemoveL2_new")
+
     SD_Counter = Level_2[1]
     proportion_2 = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
     #print(proportion_2)
     ### Level 3. Get the HSI reflectances
-    ReflectMatrix = getReflectance(HSI_info_L2, proportion_2, k, b)
+    ReflectMatrix = getReflectance(HSI_info, proportion_2, k, b)
     #ReflectMatrix = getReflectance(HSI_info, proportion_2, k, b)
 
     avg_reflect = getLeafAvgReflect(ReflectMatrix)

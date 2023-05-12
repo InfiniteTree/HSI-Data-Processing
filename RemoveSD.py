@@ -3,7 +3,7 @@ import numpy as np
 import ReadData
 import RemoveBG
 
-ShadowLeavesValue = 1000 # the set mean Hyspectra value for the leaves in shadow
+ShadowLeavesValue = 300 # the set mean Hyspectra value for the leaves in shadow
 
 def calcAmplMean(HSI, proportion):
     return HSI.mean(axis=1) / proportion 
@@ -15,6 +15,7 @@ def RemoveSD(HSI_info, set_value, cur_proportion):
     HSI_bandmean = calcAmplMean(HSI, cur_proportion)
     #print(HSI_bandmean)
     SD_Counter = 0
+    HL_position = [] # High lighted plant position
     for i in range(HSI_bandmean.shape[0]):
         for j in range(HSI_bandmean.shape[1]):
             pixel_value = HSI_bandmean[i][j]
@@ -28,11 +29,11 @@ def RemoveSD(HSI_info, set_value, cur_proportion):
                 HSI[i,:,j] = set_value[0]*4096/256
                 HSI[i,:,j] = set_value[1]*4096/256
                 HSI[i,:,j] = set_value[2]*4096/256
-                
+            else:
+                HL_position.append([i,j])  
     #print(HSI)
     #print("SDCounter is",SD_Counter)
-
-    return HSI,SD_Counter
+    return HSI,SD_Counter, np.array(HL_position)
 
 
 if __name__ == "__main__":
