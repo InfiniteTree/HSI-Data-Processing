@@ -38,7 +38,8 @@ if __name__ == "__main__":
     HSI_info = ReadData.ReadData("M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/wave.hdr",'M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/2023-01-06-10-56-46.spe')
     Plant_Pos = getPlantPos(HSI_info)[1]
     #print(len(Plant_Pos))
-    ReadData.drawImg(HSI_info,"RemoveBG_NDVI_LessThanZero")
+    ReadData.drawImg(HSI_info,"Level1_img")
+
 
 
 

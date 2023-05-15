@@ -68,24 +68,7 @@ if __name__ == "__main__":
     channels= HSI_info[1]
     samples = HSI_info[2]
     PixelSum = lines * samples
-    '''
-    ### Level 1
-    Level_1 = RemoveBG.getPlantPos(HSI_info)
-    HSI_1 = Level_1[0]
-    BG_Counter = Level_1[2]
-    proportion_1 = float((PixelSum - BG_Counter)/PixelSum)
-    HSI_info_L1= [lines, channels, samples, HSI_1]
 
-    ### Level 2
-    set_value = [0, 0, 0]
-    Level_2 = RemoveSD.RemoveSD(HSI_info_L1,set_value, proportion_1)
-    HSI_2 = Level_2[0]
-    HSI_info_L2= [lines, channels, samples, HSI_2]
-
-    
-    print("---------------Start to get the Single img channel------------------")
-    #img = get_img(HSI_info_L2,109,59,34)
-    '''
     img = cv2.imread("C:/Users/AlexChen/Desktop/HSI-Data-Processing/figures/Level2_img.jpg") 
     print("---------------Start to do KNN method----------------")
     labels_result = knn(img, 50, 4)

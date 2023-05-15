@@ -124,8 +124,7 @@ def getReflectance(HSI_info, proportion_2, k, b):
     #print(ReflectMatrix.shape)
 
     for idx in range(channels):
-        ReflectMatrix[:, idx, :] = HSI[:, idx, :] * k[idx] + b[idx]
-        
+        ReflectMatrix[:, idx, :] = (HSI[:, idx, :] * k[idx] + b[idx]) * proportion_2 ### errors remian here
     #print(ReflectMatrix.shape)
     return ReflectMatrix
 
@@ -194,7 +193,7 @@ if __name__ == "__main__":
     HSI_2 = Level_2[0]
     HSI_info_L2 = [lines, channels, samples, HSI_2,  wavelengths]
     # Draw the img
-    ReadData.drawImg(HSI_info_L2, "RemoveL2_new")
+    #ReadData.drawImg(HSI_info_L2, "RemoveL2_new")
 
     SD_Counter = Level_2[1]
     proportion_2 = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)

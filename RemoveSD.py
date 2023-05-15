@@ -53,4 +53,4 @@ if __name__ == "__main__":
     HSI_2 = RemoveSD(HSI_info_1, set_value, cur_proportion)[0]
     HSI_info_2 = [lines,channels,samples,HSI_2]
     #print(calcMean(HSI).shape)
-    ReadData.drawImg(HSI_info_2, "RemoveShadow_new")
+    ReadData.drawImg(HSI_info_2, "Level2_img")
