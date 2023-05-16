@@ -4,10 +4,12 @@ import re
 
 def Read():
     HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/wave.hdr",'M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/2023-01-06-10-56-46.spe', 1)
+    print("Successfully read the testPlant HSI")
     return HSI_info
 
 def ReadRef():
     HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/TeeSapling/wave.hdr",'M:/m-CTP_DATA/2023.1.9/TeeSapling//2022-07-27-06-32.spe', 0)
+    print("Successfully read the refBoard HSI")
     return HSI_info
 
 def ReadData(hdrfileName,spefileName, flag):
@@ -55,7 +57,6 @@ def ReadData(hdrfileName,spefileName, flag):
     imgs = np.fromfile(spefileName, dtype=np.int16).reshape(lines,channels,samples)
     #imgs = np.fromfile('M:/m-CTP_DATA/2023.1.9/TeeSapling/2022-07-27-06-21.spe', dtype=np.int16).reshape(lines,channels,samples)
     imgs = imgs.astype(np.int16) # change the value range from (0, 4095) to (0, 255)
-    print("Successfully read Spectral data")
     print("The height of imgs is",lines)
     print("The width of imgs is",samples)
     print("The length of bands",channels)

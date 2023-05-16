@@ -66,7 +66,8 @@ def mapRef(inputfile, outputfile,lineNum):
                 
     return X, Y
 
-def getReflectEquation():
+def getReflectEquation(HSI_info):
+    channels = HSI_info[1]
     RefAmplititudes_file ="Results/RefAmplititudes.csv"
     #print("------------3Ref----------")
     refSample1= mapRef(RefAmplititudes_file, "RefBoard/3Ref.csv", 1)
@@ -98,11 +99,12 @@ def getReflectEquation():
     for i in range(num):
         k.append((Y2[i] - Y1[i]) / (X2[i] - X1[i]))
         b.append(Y1[i] - k[i]*X1[i])
-    
+    '''
     print("-----------------k-------------------")
     print(k)
     print("-----------------b-------------------")
     print(b)
+    '''
     
     # Now length of k, b is 57
     # we need 300 k,b
@@ -125,7 +127,9 @@ def getReflectance(HSI_info, proportion_2, k, b):
 
     for idx in range(channels):
         ReflectMatrix[:, idx, :] = (HSI[:, idx, :] * k[idx] + b[idx]) * proportion_2 ### errors remian here
+    
     #print(ReflectMatrix.shape)
+    print("ReflectMatrix is obtained.")
     return ReflectMatrix
 
 
@@ -155,8 +159,8 @@ def getLeafAvgReflect(ReflectMatrix):
     AvgReflect = ReflectMatrix.mean(axis=(0,2))
     return AvgReflect
 
-if __name__ == "__main__":
-   # Part 1. Get the reference Board Amplititudes
+def getReflectMatrix():
+    # Part 1. Get the reference Board Amplititudes
     Ref_HSI_info = ReadData.ReadRef()
     wavelengths = Ref_HSI_info[4]
     lines = Ref_HSI_info[0]
@@ -166,7 +170,7 @@ if __name__ == "__main__":
     positionRange1 = [[870,205],[880,215]] # The right black board with more degree of darkness(r=3%)
     positionRange2 = [[870,95],[880,105]] # The left black board with less degree of darkness(r=30%)
     getRefBoard(Ref_HSI_info, positionRange1, positionRange2)
-    equation = getReflectEquation()
+    equation = getReflectEquation(Ref_HSI_info)
     k = equation[0]
     b = equation[1]
 
@@ -200,11 +204,19 @@ if __name__ == "__main__":
     #print(proportion_2)
     ### Level 3. Get the HSI reflectances
     ReflectMatrix = getReflectance(HSI_info, proportion_2, k, b)
-    #ReflectMatrix = getReflectance(HSI_info, proportion_2, k, b)
+    return ReflectMatrix
 
+
+
+if __name__ == "__main__":
+    HSI_info = ReadData.Read()
+    wavelengths = HSI_info[4]
+    lines = HSI_info[0]
+    channels= HSI_info[1]
+    samples = HSI_info[2]
+    ReflectMatrix = getReflectMatrix()
     avg_reflect = getLeafAvgReflect(ReflectMatrix)
     #print(avg_reflect)
-
 
     # Write the reflectvector into a local csv file
     FirstRow = wavelengths
@@ -215,7 +227,7 @@ if __name__ == "__main__":
         writer.writerow(FirstRow)
         # Write the remaining rows
         writer.writerow(ReflectRow)
-    
+
     # Plotting
     x = np.array(HSI_info[4])
     y = np.array(avg_reflect)
