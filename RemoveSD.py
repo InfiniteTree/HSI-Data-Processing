@@ -33,24 +33,28 @@ def RemoveSD(HSI_info, set_value, cur_proportion):
                 HL_position.append([i,j])  
     #print(HSI)
     #print("SDCounter is",SD_Counter)
-    return HSI,SD_Counter, np.array(HL_position)
+    return HSI, SD_Counter, np.array(HL_position)
 
+# Get the Level2 HSI by removing the shadows
+def getLevel2(HSI_info_L1, BG_Counter, proportion_1):
+    wavelengths = HSI_info_L1[4]
+    lines = HSI_info_L1[0] 
+    channels = HSI_info_L1[1]
+    samples = HSI_info_L1[2]
+    set_value = [0, 0, 0]
+    PixelSum = lines * samples
+    
+    HSI_2, SD_Counter, HL_position = RemoveSD(HSI_info_L1,set_value, proportion_1)
+    HSI_info_L2 = [lines, channels, samples, HSI_2,  wavelengths]
+    proportion_2 = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
+
+    return HSI_info_L2, SD_Counter, proportion_2
 
 if __name__ == "__main__":
     HSI_info = ReadData.Read()
-    lines = HSI_info[0]
-    channels= HSI_info[1]
-    samples = HSI_info[2]
-    ret_RemoveBG = RemoveBG.getPlantPos(HSI_info)
-    HSI_1 = ret_RemoveBG[0]
-    HSI_info_1 = [lines,channels,samples,HSI_1]
-
-    #set_value = [178, 34, 34]
-    PixelSum = lines * samples
-    BG_Counter = ret_RemoveBG[2]
-    cur_proportion = float((PixelSum - BG_Counter)/PixelSum)
-    set_value = [0, 0, 0]
-    HSI_2 = RemoveSD(HSI_info_1, set_value, cur_proportion)[0]
-    HSI_info_2 = [lines,channels,samples,HSI_2]
+    # Level 1
+    HSI_info_L1, BG_Counter, PixelSum, proportion_1 = RemoveBG.getLevel1(HSI_info)
+    # Level 2
+    HSI_info_L2, SD_Counter = getLevel2(HSI_info_L1, proportion_1)
     #print(calcMean(HSI).shape)
-    ReadData.drawImg(HSI_info_2, "Level2_img")
+    ReadData.drawImg(HSI_info_L2, "Level2_img")

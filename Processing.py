@@ -17,12 +17,21 @@ import GetReflectance
 def calImgSpecMean(HSI,proportion):
     return HSI.mean(axis=(0,2)) / proportion
 
-# Calculate the relative parameters of the photosynthesis
+# Calculate the relative values the photosynthesis by two methods in terms of different paras
+# Method 1: design formulas
+# Method 2: Machine learning prediction
 def getPhenotypeParas(reflectances, avg_flag):
-    if reflectances[map_band["band800"]] == 0 and avg_flag == 1:
-        PhenotypeParas = ["NA"]*8
+    # Fault Value Detection
+    NDVI = (reflectances[map_band["band800"]] - reflectances[map_band["band680"]]) / (reflectances[map_band["band800"]] + reflectances[map_band["band680"]])
+    if NDVI < -1 or NDVI > 1 and avg_flag == 1: # Bugs here
+        PhenotypeParas = ["NA"]*8 # Replace the value with "NA"
+    
+    elif NDVI < -1 or NDVI > 1 and avg_flag == 0:
+        PhenotypeParas = ["NA"]*5
+        print("Reach Here")
+    
     else:
-        # Get the first six parameters of the photosynthesis by simple mathmatical calculation
+        # Method 1: Get the first six parameters of the photosynthesis by simple mathmatical calculation
         NDVI = (reflectances[map_band["band800"]] - reflectances[map_band["band680"]]) / (reflectances[map_band["band800"]] + reflectances[map_band["band680"]])
         OSAVI = (1+0.16) * (reflectances[map_band["band800"]] - reflectances[map_band["band670"]]) / (reflectances[map_band["band800"]] + reflectances[map_band["band670"]]+ 0.16)
         PSSRa = reflectances[map_band["band800"]] / reflectances[map_band["band680"]]
@@ -30,7 +39,8 @@ def getPhenotypeParas(reflectances, avg_flag):
         PRI = (reflectances[map_band["band570"]] - reflectances[map_band["band531"]]) / (reflectances[map_band["band570"]] + reflectances[map_band["band531"]])
         #MTVI2 = 1.5 * (1.2 * (reflectances[map_band["band800"]] - reflectances[map_band["band550"]]) - 2.5 * (reflectances[map_band["band670"]] - reflectances[map_band["band550"]])) / math.sqrt(((2 * reflectances[map_band["band800"]]+1)*2 - (6*reflectances[map_band["band800"]]-5*math.sqrt(reflectances[map_band["band670"]]))-0.5))
         MTVI2 = 0
-        # Get the remaining parameters by using the trained model to predict
+
+        #  Method 2: Get the remaining parameters by using the trained model to predict
         if avg_flag == 1:
             data = pd.read_csv("model/LearningData/TrainData.csv")
             print("Dataset of Train Model loaded...")
@@ -47,8 +57,6 @@ def getPhenotypeParas(reflectances, avg_flag):
             test_x = reflectances[6:-16] # The data set of the train model only contains HS in parts of wavelength range
             test_x = pd.Series(test_x, dtype='float32')
             test_x = test_x.to_frame().T
-            
-            #print(test_x)
             y_pre = pls.predict(test_x)
             new_data = y_pre
 
@@ -61,6 +69,8 @@ def getPhenotypeParas(reflectances, avg_flag):
 
         elif avg_flag == 0:
             PhenotypeParas = [NDVI, OSAVI, PSSRa, PSSRb, PRI, MTVI2]
+        
+        # Fault Value Detection
     
     return PhenotypeParas
 
@@ -143,50 +153,14 @@ def exportPhenotypeParas_eachPixel(HSI_info,reflectanceMatrix):
             writer.writerow([(row,col)]+PhenotypeParas)
 
 if __name__ == "__main__":
+     # Level 0
     HSI_info = ReadData.Read()
-    wavelengths = HSI_info[4]
-    lines = HSI_info[0]
-    channels= HSI_info[1]
-    samples = HSI_info[2]
-    PixelSum = lines * samples
-
-    ### Level 1. Remove the background
-    Level_1 = RemoveBG.getPlantPos(HSI_info)
-    HSI_1 = Level_1[0]
-    BG_Counter = Level_1[2]
-
-    ### Level 2. Remove the shadow leaves
-    set_value = [0, 0, 0]
-    HSI_info_L1 = [lines, channels, samples, HSI_1, wavelengths]
-    proportion_1 = float((PixelSum - BG_Counter)/PixelSum)
-    Level_2 = RemoveSD.RemoveSD(HSI_info_L1,set_value, proportion_1)
-    HSI_2 = Level_2[0]
-    HSI_info_L2 = [lines, channels, samples, HSI_2,  wavelengths]
-
-    SD_Counter = Level_2[1]
-    proportion_2 = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
-    print("PixelSum is",PixelSum)
-    '''
-    print("SD_Counter is",SD_Counter)
-    print("BG_Counter is",BG_Counter)
-    '''
-    print("The remaining proportion is ",proportion_2)
-
-    #Get the reference Board Amplititudes
-    Ref_HSI_info = ReadData.ReadRef()
-    wavelengths = Ref_HSI_info[4]
-    lines = Ref_HSI_info[0]
-    channels= Ref_HSI_info[1]
-    samples = Ref_HSI_info[2]
-
-    positionRange1 = [[870,205],[880,215]] # The right black board with more degree of darkness(r=3%)
-    positionRange2 = [[870,95],[880,105]] # The left black board with less degree of darkness(r=30%)
-    GetReflectance.getRefBoard(Ref_HSI_info, positionRange1, positionRange2)
-    equation = GetReflectance.getReflectEquation(Ref_HSI_info)
-    k = equation[0]
-    b = equation[1]
-
-    reflectanceMatrix = GetReflectance.getReflectance(HSI_info, proportion_2, k, b)
+    # Level 1
+    HSI_info_L1, BG_Counter, proportion_1 = RemoveBG.getLevel1(HSI_info)
+    # Level 2
+    HSI_info_L2, SD_Counter, proportion_2 = RemoveSD.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
+    # Level 3
+    reflectanceMatrix = GetReflectance.getReflectMatrix(HSI_info_L2, proportion_2) 
     #print(reflectanceMatrix)
     
     avg_flag = 0
@@ -198,4 +172,4 @@ if __name__ == "__main__":
         exportPhenotypeParas_eachPixel(HSI_info_L2, reflectanceMatrix)
 
     curve_file = "Results/ReflectCurve.csv"
-    ### exportPhenotypeParas(curve_file)
+    exportPhenotypeParas(curve_file)

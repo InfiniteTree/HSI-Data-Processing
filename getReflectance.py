@@ -159,13 +159,9 @@ def getLeafAvgReflect(ReflectMatrix):
     AvgReflect = ReflectMatrix.mean(axis=(0,2))
     return AvgReflect
 
-def getReflectMatrix():
+def getReflectMatrix(HSI_info, proportion):
     # Part 1. Get the reference Board Amplititudes
     Ref_HSI_info = ReadData.ReadRef()
-    wavelengths = Ref_HSI_info[4]
-    lines = Ref_HSI_info[0]
-    channels= Ref_HSI_info[1]
-    samples = Ref_HSI_info[2]
 
     positionRange1 = [[870,205],[880,215]] # The right black board with more degree of darkness(r=3%)
     positionRange2 = [[870,95],[880,105]] # The left black board with less degree of darkness(r=30%)
@@ -176,49 +172,28 @@ def getReflectMatrix():
 
     # Part 2. Map the RefBoard Amplititudes with the reflections
     # Read the particular plot image
-    HSI_info = ReadData.Read()
-    wavelengths = HSI_info[4]
-    lines = HSI_info[0]
-    channels= HSI_info[1]
-    samples = HSI_info[2]
-    PixelSum = lines * samples
-    ### Level 1. Remove the background
-    Level_1 = RemoveBG.getPlantPos(HSI_info)
-    HSI_1 = Level_1[0]
-    BG_Counter = Level_1[2]
-
-    ### Level 2. Remove the shadow leaves
-    set_value = [0, 0, 0]
-    HSI_info_L1 = [lines, channels, samples, HSI_1, wavelengths]
-    proportion_1 = float((PixelSum - BG_Counter)/PixelSum)
-    Level_2 = RemoveSD.RemoveSD(HSI_info_L1,set_value, proportion_1)
-
-    #getReflectance(HSI_info)
-    HSI_2 = Level_2[0]
-    HSI_info_L2 = [lines, channels, samples, HSI_2,  wavelengths]
-    # Draw the img
-    #ReadData.drawImg(HSI_info_L2, "RemoveL2_new")
-
-    SD_Counter = Level_2[1]
-    proportion_2 = float((PixelSum - SD_Counter - BG_Counter)/PixelSum)
+    HSI_info_L2, proportion_2 = HSI_info, proportion
     #print(proportion_2)
-    ### Level 3. Get the HSI reflectances
-    ReflectMatrix = getReflectance(HSI_info, proportion_2, k, b)
+    # Level 3. Get the HSI reflectances
+    ReflectMatrix = getReflectance(HSI_info_L2, proportion_2, k, b)
     return ReflectMatrix
 
 
 
 if __name__ == "__main__":
+    # Level 0
     HSI_info = ReadData.Read()
-    wavelengths = HSI_info[4]
-    lines = HSI_info[0]
-    channels= HSI_info[1]
-    samples = HSI_info[2]
-    ReflectMatrix = getReflectMatrix()
+    # Level 1
+    HSI_info_L1, BG_Counter, proportion_1 = RemoveBG.getLevel1(HSI_info)
+    # Level 2
+    HSI_info_L2, SD_Counter, proportion_2 = RemoveSD.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
+
+    ReflectMatrix = getReflectMatrix(HSI_info_L2, proportion_2)
     avg_reflect = getLeafAvgReflect(ReflectMatrix)
     #print(avg_reflect)
 
     # Write the reflectvector into a local csv file
+    wavelengths = HSI_info_L2[4]
     FirstRow = wavelengths
     ReflectRow = avg_reflect
     with open("Results/ReflectCurve.csv","w",newline='') as f:

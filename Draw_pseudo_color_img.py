@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import ReadData
+import RemoveBG
+import RemoveSD
 import GetReflectance
 import Processing
 
@@ -49,21 +51,26 @@ def draw_pseudoColorImg(HSI_info, PhenotypeParas,filename,idx):
     
     return
 
-if __name__ == "__main__":
-    HSI_info = ReadData.Read()
-    wavelengths = HSI_info[4]
-    lines = HSI_info[0]
-    channels= HSI_info[1]
-    samples = HSI_info[2]
-    PixelSum = lines * samples
-
-    reflectanceMatrix = GetReflectance.getReflectMatrix()
-
-    PhenotypeParas = getPhenotypeParasMatrix(reflectanceMatrix)
-
+def draw_pseudoColorImgs(HSI_info, PhenotypeParas):
     draw_pseudoColorImg(HSI_info, PhenotypeParas, "pseudoColorImg_NDVI.png",0)
     draw_pseudoColorImg(HSI_info, PhenotypeParas, "pseudoColorImg_OSAVI.png",1)
     draw_pseudoColorImg(HSI_info, PhenotypeParas, "pseudoColorImg_PSSRa.png",2)
     draw_pseudoColorImg(HSI_info, PhenotypeParas, "pseudoColorImg_PSSRb.png",3)
     draw_pseudoColorImg(HSI_info, PhenotypeParas, "pseudoColorImg_PRI.png",4)
     draw_pseudoColorImg(HSI_info, PhenotypeParas, "pseudoColorImg_MTVI2.png",5)
+
+if __name__ == "__main__":
+   # Level 0
+    HSI_info = ReadData.Read()
+    # Level 1
+    HSI_info_L1, BG_Counter, proportion_1 = RemoveBG.getLevel1(HSI_info)
+    # Level 2
+    HSI_info_L2, SD_Counter, proportion_2 = RemoveSD.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
+    # Level 3
+    reflectanceMatrix = GetReflectance.getReflectMatrix(HSI_info_L2, proportion_2) 
+
+    # Draw pseudo-Color Images
+    PhenotypeParas = getPhenotypeParasMatrix(reflectanceMatrix)
+    draw_pseudoColorImgs(HSI_info, PhenotypeParas)
+
+

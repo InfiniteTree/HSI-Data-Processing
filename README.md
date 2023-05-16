@@ -1,2 +1,2 @@
-# Data-Processing-on-Hyperspectral--Data-From-CCD
-Data Processing
+# m-CTP-Data-Processing
+Data Processing on the data of m-CTP
