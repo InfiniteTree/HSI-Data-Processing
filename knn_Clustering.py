@@ -96,7 +96,8 @@ if __name__ == "__main__":
             samples = HSI_info[2]
             PixelSum = lines * samples
 
-            img = cv2.imread("figures/wheat/pre_processing/Level2_img_new.jpg") 
+            #img = cv2.imread("figures/wheat/pre_processing/Level2_img_new.jpg") 
+            img = cv2.imread("figures/wheat/test.jpg")
             print("---------------Start to do KNN method----------------")
             knn_center_num = 2
             iter_time = 50
@@ -113,6 +114,7 @@ if __name__ == "__main__":
             plt.show()
 
             # Get the indices of all pixels labeled as "abnormal blades" (class 2)
+            PixelSum = img_row * img_col
             for i in range(knn_center_num):
                 print("When labels_img ==",i)
                 abnormal_indices = np.where(labels_img == i)
@@ -122,9 +124,25 @@ if __name__ == "__main__":
                 abnormal_proportion = len(abnormal_pixels) / PixelSum
                 #print(abnormal_pixels)
                 print(abnormal_proportion)
+            
+            normal_indices = np.where(labels_img == 1)
+            abnormal_indices = np.where(labels_img == 2)
+
+            # Convert the indices to (x,y) coordinates
+            normal_pixels = np.column_stack((normal_indices[0], normal_indices[1]))
+            abnormal_pixels = np.column_stack((abnormal_indices[0], abnormal_indices[1]))
 
         case 2:
-            img = Image.open("figures/wheat/pre_processing/Level2_img_new.jpg") 
+            #img = Image.open("figures/wheat/pre_processing/Level2_img_new.jpg")
+            '''
+            img = Image.open("figures/wheat/test.jpg")
+            print(type(img))
+            '''
+            img = cv2.imread("figures/wheat/test.jpg")
+            print(type(img))
+            
+            print(img.shape)
+            print(img.shape[0])
             get_HSVimg(img)
 
 
