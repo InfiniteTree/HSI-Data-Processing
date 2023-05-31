@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 import ReadData
 import RemoveBG
-import RemoveSD
+import RemoveDB
 import GetReflectance
 import Processing
 
@@ -27,27 +27,28 @@ def draw_pseudoColorImg(HSI_info, PhenotypeParas,filename,idx):
     slice_2d = PhenotypeParas[:, idx, :]
 
     fig, ax = plt.subplots(figsize=(6, 8))
-    if idx == 0:
-        im = ax.imshow(slice_2d, cmap='hot',interpolation='nearest')
-        ax.set_title("Pseudo_Color Map of the Relative Values on NDVI", y=1.05)
-    elif idx == 1:
-        im = ax.imshow(slice_2d, cmap='viridis',interpolation='nearest')
-        ax.set_title("Pseudo_Color Map of the Relative Values on OSAVI", y=1.05)
-    elif idx == 2:
-        im = ax.imshow(slice_2d, cmap='seismic',interpolation='nearest')
-        ax.set_title("Pseudo_Color Map of the Relative Values on PSSRa", y=1.05)
-    elif idx == 3:
-        im = ax.imshow(slice_2d, cmap='coolwarm',interpolation='nearest')
-        ax.set_title("Pseudo_Color Map of the Relative Values on PSSRb", y=1.05)
-    elif idx == 4:
-        im = ax.imshow(slice_2d, cmap='magma',interpolation='nearest')
-        ax.set_title("Pseudo_Color Map of the Relative Values on PRI", y=1.05)
-    elif idx == 5:
-        im = ax.imshow(slice_2d, cmap='hot',interpolation='nearest')
-        ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
+    match idx:
+        case 0:
+            im = ax.imshow(slice_2d, cmap='hot',interpolation='nearest')
+            ax.set_title("Pseudo_Color Map of the Relative Values on NDVI", y=1.05)
+        case 1:
+            im = ax.imshow(slice_2d, cmap='viridis',interpolation='nearest')
+            ax.set_title("Pseudo_Color Map of the Relative Values on OSAVI", y=1.05)
+        case 2:
+            im = ax.imshow(slice_2d, cmap='seismic',interpolation='nearest')
+            ax.set_title("Pseudo_Color Map of the Relative Values on PSSRa", y=1.05)
+        case 3:
+            im = ax.imshow(slice_2d, cmap='coolwarm',interpolation='nearest')
+            ax.set_title("Pseudo_Color Map of the Relative Values on PSSRb", y=1.05)
+        case 4:
+            im = ax.imshow(slice_2d, cmap='magma',interpolation='nearest')
+            ax.set_title("Pseudo_Color Map of the Relative Values on PRI", y=1.05)
+        case 5:
+            im = ax.imshow(slice_2d, cmap='hot',interpolation='nearest')
+            ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
 
     cbar = fig.colorbar(im)
-    plt.savefig("figures/pseudoColorImg/"+filename)
+    plt.savefig("figures/wheat/pseudoColorImg/"+filename)
     
     return
 
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     # Level 1
     HSI_info_L1, BG_Counter, proportion_1 = RemoveBG.getLevel1(HSI_info)
     # Level 2
-    HSI_info_L2, SD_Counter, proportion_2 = RemoveSD.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
+    HSI_info_L2, SD_Counter, proportion_2 = RemoveDB.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
     # Level 3
     reflectanceMatrix = GetReflectance.getReflectMatrix(HSI_info_L2, proportion_2) 
 

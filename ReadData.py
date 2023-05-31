@@ -3,7 +3,7 @@ from PIL import Image
 import re
 
 def Read():
-    HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/wave.hdr",'M:/m-CTP_DATA/2023.1.9/Vegetables/TASK2023-01-06-10-52/Hyperspectral/2023-01-06-10-56-46.spe', 1)
+    HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/wheat/TASK2023-01-08-02-42/Hyperspectral/2023-01-08-06-01-59.hdr","M:/m-CTP_DATA/2023.1.9/wheat/TASK2023-01-08-02-42/Hyperspectral/2023-01-08-06-01-59.spe", 1)
     print("Successfully read the testPlant HSI")
     return HSI_info
 
@@ -23,11 +23,10 @@ def ReadData(hdrfileName,spefileName, flag):
     waveFlag = 0
     for row in range(len(data)):
         if data[row][0] == 'lines':
-            #lines = int(re.findall("\d{4}",data[row][2])[0])
             if (flag==0):
                 lines = int(195840000/300/480)
             if (flag==1):
-                lines = int(192960000/300/480)
+                lines = int(re.findall("\d{4}",data[row][1])[0])
             continue
         if data[row][0] == 'samples':
             samples = int(re.findall("\d{3}",data[row][2])[0])
@@ -79,19 +78,8 @@ def drawImg(HSI_info, filename):
 
 # Plotting
 if __name__ == "__main__":
-    HSI_info = ReadRef()
+    HSI_info = Read()
     #print(imgs)
     
-    drawImg(HSI_info, "Original_Tee")
-
-
-
-
-
-
-
-
-
-
-
+    drawImg(HSI_info, "Original_paddy")
 

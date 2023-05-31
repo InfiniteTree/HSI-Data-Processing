@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 
 import ReadData
 import RemoveBG
-import RemoveSD
+import RemoveDB
 
 def getReferAmplititudes(HSI_info, positionRange):
     channels = HSI_info[1]
@@ -186,8 +186,8 @@ if __name__ == "__main__":
     # Level 1
     HSI_info_L1, BG_Counter, proportion_1 = RemoveBG.getLevel1(HSI_info)
     # Level 2
-    HSI_info_L2, SD_Counter, proportion_2 = RemoveSD.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
-
+    HSI_info_L2, SD_Counter, proportion_2 = RemoveDB.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
+    # Level 3
     ReflectMatrix = getReflectMatrix(HSI_info_L2, proportion_2)
     avg_reflect = getLeafAvgReflect(ReflectMatrix)
     #print(avg_reflect)

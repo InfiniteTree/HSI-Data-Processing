@@ -9,7 +9,7 @@ from sklearn.model_selection import GridSearchCV
 
 import ReadData
 import RemoveBG
-import RemoveSD
+import RemoveDB
 from setting import map_band
 import GetReflectance
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # Level 1
     HSI_info_L1, BG_Counter, proportion_1 = RemoveBG.getLevel1(HSI_info)
     # Level 2
-    HSI_info_L2, SD_Counter, proportion_2 = RemoveSD.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
+    HSI_info_L2, SD_Counter, proportion_2 = RemoveDB.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
     # Level 3
     reflectanceMatrix = GetReflectance.getReflectMatrix(HSI_info_L2, proportion_2) 
     #print(reflectanceMatrix)

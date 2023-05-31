@@ -9,7 +9,6 @@ NDVI_SET_VALUE = 0 # Need to be reset here
 
 #class HSI
 def getPlantPos(HSI_info):
-
     lines = HSI_info[0]
     channels = HSI_info[1]
     samples =  HSI_info[2]
@@ -54,10 +53,7 @@ if __name__ == "__main__":
     HSI_info = ReadData.Read()
     Plant_Pos = getPlantPos(HSI_info)[1]
     #print(len(Plant_Pos))
-    ReadData.drawImg(HSI_info,"Level1_img")
-
-
-
+    ReadData.drawImg(HSI_info,"pre_processing/Level1_img")
 
 
     
