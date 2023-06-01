@@ -3,27 +3,29 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import cv2
 import colorsys
+import copy
 from sklearn.cluster import KMeans
 
 import ReadData
 
+# Define the thershold of the background
+lower_hsv = np.array([20, 100, 60]) 
+upper_hsv = np.array([60, 255, 255])  
+
 def knn(img, iter, k):
-    img = get_HSVimg(img)[0]
+    print("-----------Start to get the HSV image-------------")
+    #img = get_HSVimg(img)[0]
     img_row = img.shape[0]
     img_col = img.shape[1]
     img = img.reshape(-1,3) # Rshape for reducing the loops
 
-    # Remove background pixels from the clustered image
-    bg_indices = np.where(np.all(img == [0, 0, 0], axis=-1))[0]
-    img_new = img[np.logical_not(np.isin(np.arange(img_row*img_col), bg_indices)), :]
-    #print(img_new.shape)
-
     img_new = np.column_stack((img, np.ones(img_row*img_col))) # Add a new column
 
-    # step 1. Randomly choose clustering center points
-    cluster_orientation = np.random.choice(img_row*img_col, k, replace=False) # k positions of index
+    # step 1. Randomly choose clustering center points withought the background point
+    #cluster_orientation = np.random.choice(img_row*img_col, k, replace=False) # k positions of index
+    cluster_orientation = np.random.choice(np.where(np.any(img_new != [0, 0, 0, 1], axis=1))[0], k, replace=False)
     cluster_center = img_new[cluster_orientation, :] # get the pixel value according to the cluster_center position
-
+    
     # Iteration
     distance = [ [] for j in range(k)] # [ [], [], [], [], []]create a list,each element represents a column vector ，which stores its distance to the center pixel j
     for i in range(iter):
@@ -39,8 +41,10 @@ def knn(img, iter, k):
         # step 4. Update the jth clustering center
         for j in range(k):
             one_cluster = img_new[img_new[:, 3] == j] # find all the pixels with label j
-            cluster_center[j] = np.mean(one_cluster, axis=0) # get the mean rgb values of pixels in one_cluster
-
+            # Remove the backgound pixels
+            #print(one_cluster.shape)
+            
+            cluster_center[j] = np.mean(one_cluster, axis=0)  # Find the mean value of the pixels and update the center
     #print(img_new.shape[0],img_new.shape[1])
     return cluster_center, img_new
 
@@ -79,7 +83,6 @@ def get_HSVimg(RGBimg):
     kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(hsv_flat)
     labels = kmeans.labels_
     centers = kmeans.cluster_centers_
-    
     # Reshape labels back to the original image shape
     labels = labels.reshape(hsv_array.shape[:2])
     '''
@@ -97,20 +100,23 @@ if __name__ == "__main__":
             PixelSum = lines * samples
 
             #img = cv2.imread("figures/wheat/pre_processing/Level2_img_new.jpg") 
-            img = cv2.imread("figures/wheat/test.jpg")
+            img = cv2.imread("figures/wheat/test/test_new.jpg")
             print("---------------Start to do KNN method----------------")
-            knn_center_num = 2
-            iter_time = 50
-            labels_result = knn(img, iter_time, knn_center_num) # Clustering for 3 classes: 1) Useless info; 2) Normal blades info; 3) abnormal blades;
+            knn_center_num = 3 # Clustering for 3 classes: 1) Useless info; 2) Normal blades info; 3) abnormal blades;
+            #iter_time = 50 # normal value
+            iter_time = 20 # test value
+            labels_result = knn(img, iter_time, knn_center_num) 
+            print("---------------KNN Finish----------------")
             labels_centers = labels_result[0]
 
             labels_vector = labels_result[1]
             img_row = img.shape[0]
             img_col = img.shape[1]
             labels_img = labels_vector[:,3].reshape(img_row, img_col)
+
             
             plt.imshow(labels_img)
-            plt.savefig("figures/wheat/Clustering/HSV_knn_cluster_n={0}.jpg".format(knn_center_num))
+            plt.savefig("figures/wheat/Clustering/test/test_new_HSV_knn_cluster_n={0}.jpg".format(knn_center_num))
             plt.show()
 
             # Get the indices of all pixels labeled as "abnormal blades" (class 2)
@@ -125,25 +131,14 @@ if __name__ == "__main__":
                 #print(abnormal_pixels)
                 print(abnormal_proportion)
             
-            normal_indices = np.where(labels_img == 1)
-            abnormal_indices = np.where(labels_img == 2)
-
-            # Convert the indices to (x,y) coordinates
-            normal_pixels = np.column_stack((normal_indices[0], normal_indices[1]))
-            abnormal_pixels = np.column_stack((abnormal_indices[0], abnormal_indices[1]))
-
         case 2:
             #img = Image.open("figures/wheat/pre_processing/Level2_img_new.jpg")
             '''
             img = Image.open("figures/wheat/test.jpg")
             print(type(img))
             '''
-            img = cv2.imread("figures/wheat/test.jpg")
-            print(type(img))
-            
-            print(img.shape)
-            print(img.shape[0])
+            img = cv2.imread("figures/wheat/test/test_new.jpg")
             get_HSVimg(img)
-
+        
 
 
