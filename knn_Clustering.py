@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import cv2
 import colorsys
-import copy
+import csv
 from sklearn.cluster import KMeans
 
 import ReadData
@@ -88,49 +88,80 @@ def get_HSVimg(RGBimg):
     '''
     return hsv_array, hsv_image
 
+def getknnlabels():
+    #img = cv2.imread("figures/wheat/pre_processing/Level2_img_new.jpg") 
+    img = cv2.imread("figures/wheat/test/test_new.jpg")
+    print("---------------Start to do KNN method----------------")
+    knn_center_num = 3 # Clustering for 3 classes: 1) Useless info; 2) Normal blades info; 3) abnormal blades;
+    #iter_time = 50 # normal value
+    iter_time = 10 # test value
+    labels_result = knn(img, iter_time, knn_center_num) 
+    print("---------------KNN Finish----------------")
+    labels_centers = labels_result[0]
+
+    labels_vector = labels_result[1]
+    img_row = img.shape[0]
+    img_col = img.shape[1]
+    labels_img = labels_vector[:,3].reshape(img_row, img_col)
+
+    plt.imshow(labels_img)
+    plt.savefig("figures/wheat/Clustering/test/randomTry_knn_cluster_n={0}.jpg".format(knn_center_num))
+    plt.show()
+
+    # Get the indices of all pixels labeled as "abnormal blades" (class 2)
+    PixelSum = img_row * img_col
+    abnormal_proportion = 1.0
+    for i in range(knn_center_num):
+        print("When labels_img ==",i)
+        one_indices = np.where(labels_img == i)
+        # Convert the indices to (x,y) coordinates
+        relavent_pixels = np.column_stack((one_indices[0], one_indices[1]))
+        # Get the proportion of the relavent  pixels by assuming the propotion of the abnormal blades is minimum
+        relavent_proportion = len(relavent_pixels) / PixelSum
+        if relavent_proportion < abnormal_proportion:
+            abnormal_proportion = relavent_proportion # Record the propotion of the abnormal blades
+            abnormal_pixels = relavent_pixels
+        print(relavent_proportion)
+    print(abnormal_pixels)
+    return abnormal_pixels, abnormal_proportion
+
+def output(filename1, filename2):
+    HSI_info = ReadData.Read()
+    wavelengths = HSI_info[4]
+    lines = HSI_info[0]
+    HSI_img = HSI_info[3]
+    channels= HSI_info[1]
+    samples = HSI_info[2]
+    PixelSum = lines * samples
+
+    abnormal_pixels = getknnlabels()[0]
+    abnormal_HSI = HSI_img[abnormal_pixels[:, 0], : ,abnormal_pixels[:, 1]]
+    #print(abnormal_HSI)
+    abnormal_mean_HSI = np.mean(abnormal_HSI, axies=(0, 2))
+    
+    print(abnormal_HSI)
+
+    print("------------Begin to write each row-------")
+    height, bands, width = abnormal_HSI.shape
+    spectral_data_2d = np.reshape(abnormal_HSI, (height * width, bands))
+    bands_info = np.reshape(wavelengths, (1, bands))
+    spectral_data_2d_with_bands = np.concatenate((bands_info, spectral_data_2d))
+    np.savetxt(filename1, spectral_data_2d_with_bands, delimiter=',')
+    print("------------Finish writing each row-------")
+
+    print("------------Begin to write the mean row-------")
+    spectral_data_mean_2d = np.reshape(abnormal_mean_HSI, (height * width, bands))
+    spectral_data_mean_2d_with_bands = np.concatenate((bands_info, spectral_data_mean_2d))
+    np.savetxt(filename1, spectral_data_mean_2d_with_bands, delimiter=',')
+    print("------------Finish writing the mean row-------")
+
+    
 if __name__ == "__main__":
-    test = 1
+    test = 3
     match test:
         case 1:
-            HSI_info = ReadData.Read()
-            wavelengths = HSI_info[4]
-            lines = HSI_info[0]
-            channels= HSI_info[1]
-            samples = HSI_info[2]
-            PixelSum = lines * samples
+            output("test/abnormal_HSI.csv", "test/abnormal_mean_HSI.csv")
 
-            #img = cv2.imread("figures/wheat/pre_processing/Level2_img_new.jpg") 
-            img = cv2.imread("figures/wheat/test/test_new.jpg")
-            print("---------------Start to do KNN method----------------")
-            knn_center_num = 3 # Clustering for 3 classes: 1) Useless info; 2) Normal blades info; 3) abnormal blades;
-            #iter_time = 50 # normal value
-            iter_time = 20 # test value
-            labels_result = knn(img, iter_time, knn_center_num) 
-            print("---------------KNN Finish----------------")
-            labels_centers = labels_result[0]
-
-            labels_vector = labels_result[1]
-            img_row = img.shape[0]
-            img_col = img.shape[1]
-            labels_img = labels_vector[:,3].reshape(img_row, img_col)
-
-            
-            plt.imshow(labels_img)
-            plt.savefig("figures/wheat/Clustering/test/test_new_HSV_knn_cluster_n={0}.jpg".format(knn_center_num))
-            plt.show()
-
-            # Get the indices of all pixels labeled as "abnormal blades" (class 2)
-            PixelSum = img_row * img_col
-            for i in range(knn_center_num):
-                print("When labels_img ==",i)
-                abnormal_indices = np.where(labels_img == i)
-                # Convert the indices to (x,y) coordinates
-                abnormal_pixels = np.column_stack((abnormal_indices[0], abnormal_indices[1]))
-                # Get the proportion of the abnormal pixels
-                abnormal_proportion = len(abnormal_pixels) / PixelSum
-                #print(abnormal_pixels)
-                print(abnormal_proportion)
-            
         case 2:
             #img = Image.open("figures/wheat/pre_processing/Level2_img_new.jpg")
             '''
@@ -139,6 +170,8 @@ if __name__ == "__main__":
             '''
             img = cv2.imread("figures/wheat/test/test_new.jpg")
             get_HSVimg(img)
-        
+     
+        case 3:
+            getknnlabels()
 
 

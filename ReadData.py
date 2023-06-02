@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 import re
+import csv
 
 def Read():
     HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/wheat/TASK2023-01-08-02-42/Hyperspectral/2023-01-08-06-01-59.hdr","M:/m-CTP_DATA/2023.1.9/wheat/TASK2023-01-08-02-42/Hyperspectral/2023-01-08-06-01-59.spe", 1)
@@ -79,7 +80,17 @@ def drawImg(HSI_info, filename):
 # Plotting
 if __name__ == "__main__":
     HSI_info = Read()
+    wavelengths = HSI_info[4]
+    HSI_img = HSI_info[3]
     #print(imgs)
+    print("------------Begin to write each row-------")
+    height, bands, width = HSI_img.shape
+    spectral_data_2d = np.reshape(HSI_img, (height * width, bands))
+    bands_info = np.reshape(wavelengths, (1, bands))
+    spectral_data_2d_with_bands = np.concatenate((bands_info, spectral_data_2d))
+    csv_file_path = 'spectral_data.csv'
+    np.savetxt(csv_file_path, spectral_data_2d_with_bands, delimiter=',')
+    print("------------Finish writing each row-------")
     
-    drawImg(HSI_info, "Original_paddy")
+    
 
