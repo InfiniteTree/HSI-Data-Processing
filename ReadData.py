@@ -24,42 +24,53 @@ def ReadData(hdrfileName,spefileName, flag):
     waveFlag = 0
     for row in range(len(data)):
         if data[row][0] == 'lines':
+            print(data[row])
             if (flag==0):
                 lines = int(195840000/300/480)
             if (flag==1):
-                lines = int(re.findall("\d{4}",data[row][1])[0])
+                lines = int(re.findall("\d{3}",data[row][2])[0])
             continue
         if data[row][0] == 'samples':
+            print(data[row])
             samples = int(re.findall("\d{3}",data[row][2])[0])
             continue
         if data[row][0] == 'bands':
+            print(data[row])
             channels = int(re.findall("\d{3}",data[row][2])[0])
             continue
         if data[row][0] == "wavelength" and data[row][1] != "units":
+            print(data[row])
+            '''
             str = data[row][2]
             str = str.replace("{","")
             str = str.replace("\n","")
             wavelengths.append(str)
+            '''
             waveFlag = 1
             continue
         if waveFlag == 1:
-            str = ','.join(data[row])
+            data_row = data[row]
+            str = ''.join(data[row])
             str = str.replace("\n","")
             str = str.replace("}","")
             wavelengths.append(str)
+                
+    #print(wavelengths)
     raw = ""
     wavelengths = raw.join(wavelengths)
     wavelengths = wavelengths.split(",")
-    #print(wavelengths)
+    print(wavelengths)
+
+    print("The height of imgs is",lines)
+    print("The width of imgs is",samples)
+    print("The length of bands",channels)
 
     ### Read .spe file
     # Load file and reshape
     imgs = np.fromfile(spefileName, dtype=np.int16).reshape(lines,channels,samples)
     #imgs = np.fromfile('M:/m-CTP_DATA/2023.1.9/TeeSapling/2022-07-27-06-21.spe', dtype=np.int16).reshape(lines,channels,samples)
     imgs = imgs.astype(np.int16) # change the value range from (0, 4095) to (0, 255)
-    print("The height of imgs is",lines)
-    print("The width of imgs is",samples)
-    print("The length of bands",channels)
+
     #print("wavelength is")
     #print(wavelengths)
     #print(imgs.shape)
@@ -77,8 +88,10 @@ def drawImg(HSI_info, filename):
     fileName = "figures/" + filename + ".jpg"
     newimg.save(fileName)
 
+
 # Plotting
 if __name__ == "__main__":
+    '''
     HSI_info = Read()
     wavelengths = HSI_info[4]
     HSI_img = HSI_info[3]
@@ -91,6 +104,11 @@ if __name__ == "__main__":
     csv_file_path = 'spectral_data.csv'
     np.savetxt(csv_file_path, spectral_data_2d_with_bands, delimiter=',')
     print("------------Finish writing each row-------")
+    '''
+    HSI_info = ReadData("C:/Users/AlexChen/Desktop/testGlant/20200527100522.hdr","C:/Users/AlexChen/Desktop/testGlant/20200527100522.hdr",1)
+    drawImg(HSI_info, "test")
+    
+
     
     
 
