@@ -15,7 +15,9 @@ def calcAmplMean(HSI, proportion):
 
 def RemoveDB(HSI_info, set_value, cur_proportion, Remove_type):
     global SD_Counter, BT_Counter, DB_Counter
-    samples = HSI_info[1]
+    lines = HSI_info[0] 
+    samples = HSI_info[2]
+    PixelSum = lines * samples
     HSI = np.array(HSI_info[3])
     HSI_bandmean = calcAmplMean(HSI, cur_proportion)
     #print(HSI_bandmean.mean())
@@ -42,10 +44,13 @@ def RemoveDB(HSI_info, set_value, cur_proportion, Remove_type):
     #print(HSI)
     if Remove_type == "BT":
         print("BTCounter is",BT_Counter)
+        cur_proportion = float((PixelSum * cur_proportion - BT_Counter) / PixelSum)
+
     if Remove_type == "SD":
         print("SDCounter is",SD_Counter)
+        cur_proportion = float((PixelSum * cur_proportion - SD_Counter) / PixelSum)
     
-    return HSI, DB_Counter, np.array(HL_position)
+    return HSI, DB_Counter, np.array(HL_position), cur_proportion
 
 
 # Get the Level2 HSI by removing the shadows
