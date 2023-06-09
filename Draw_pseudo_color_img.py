@@ -19,11 +19,6 @@ def getPhenotypeParasMatrix(reflectanceMatrix):
     return PhenotypeParasMatrix
 
 def draw_pseudoColorImg(HSI_info, PhenotypeParas,filename,idx):
-    lines = HSI_info[0]
-    PhenotypeParasNum = 6
-    samples = HSI_info[2]
-    HSI = HSI_info[3]
-    
     slice_2d = PhenotypeParas[:, idx, :]
 
     fig, ax = plt.subplots(figsize=(6, 8))

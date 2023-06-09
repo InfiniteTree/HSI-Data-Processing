@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1133</width>
-    <height>776</height>
+    <height>1256</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -86,383 +86,368 @@ font: 12pt &quot;Agency FB&quot;;
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
-             <widget class="QFrame" name="frame_4">
-              <property name="geometry">
-               <rect>
-                <x>12</x>
-                <y>12</y>
-                <width>430</width>
-                <height>641</height>
-               </rect>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_5">
-               <item>
-                <widget class="QFrame" name="frame_5">
-                 <property name="frameShape">
-                  <enum>QFrame::StyledPanel</enum>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
-                 </property>
-                 <layout class="QHBoxLayout" name="horizontalLayout_18">
-                  <item>
-                   <layout class="QVBoxLayout" name="verticalLayout">
-                    <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_14">
-                      <item>
-                       <widget class="QPushButton" name="impRawBtn">
-                        <property name="font">
-                         <font>
-                          <family>Agency FB</family>
-                          <pointsize>12</pointsize>
-                          <weight>50</weight>
-                          <italic>false</italic>
-                          <bold>false</bold>
-                         </font>
-                        </property>
-                        <property name="cursor">
-                         <cursorShape>PointingHandCursor</cursorShape>
-                        </property>
-                        <property name="statusTip">
-                         <string/>
-                        </property>
-                        <property name="text">
-                         <string>导入单张原始照片</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <spacer name="horizontalSpacer_2">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                        <property name="sizeHint" stdset="0">
-                         <size>
-                          <width>40</width>
-                          <height>20</height>
-                         </size>
-                        </property>
-                       </spacer>
-                      </item>
-                      <item>
-                       <widget class="QPushButton" name="impRawsBtn">
-                        <property name="font">
-                         <font>
-                          <family>Agency FB</family>
-                          <pointsize>12</pointsize>
-                          <weight>50</weight>
-                          <italic>false</italic>
-                          <bold>false</bold>
-                         </font>
-                        </property>
-                        <property name="cursor">
-                         <cursorShape>PointingHandCursor</cursorShape>
-                        </property>
-                        <property name="text">
-                         <string>导入多张原始照片</string>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_15">
-                      <item>
-                       <widget class="QLabel" name="label">
-                        <property name="styleSheet">
-                         <string notr="true">Border: none</string>
-                        </property>
-                        <property name="text">
-                         <string>文件路径：</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QLineEdit" name="rawHSIPathlineEdit">
-                        <property name="text">
-                         <string>高光谱图像数据文件路径</string>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="impBRFImgBtn">
-                      <property name="font">
-                       <font>
-                        <family>Agency FB</family>
-                        <pointsize>12</pointsize>
-                        <weight>50</weight>
-                        <italic>false</italic>
-                        <bold>false</bold>
-                       </font>
-                      </property>
-                      <property name="cursor">
-                       <cursorShape>PointingHandCursor</cursorShape>
-                      </property>
-                      <property name="statusTip">
-                       <string/>
-                      </property>
-                      <property name="text">
-                       <string>导入反射板照片</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_19">
-                      <item>
-                       <widget class="QLabel" name="label_9">
-                        <property name="styleSheet">
-                         <string notr="true">Border: none</string>
-                        </property>
-                        <property name="text">
-                         <string>文件路径：</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QLineEdit" name="BRFPathlineEdit">
-                        <property name="text">
-                         <string>反射板图像数据文件路径</string>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_13">
-                      <item>
-                       <widget class="QPushButton" name="rgbGeneBtn">
-                        <property name="text">
-                         <string>处理</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QPushButton" name="rgbViewBtn">
-                        <property name="enabled">
-                         <bool>false</bool>
-                        </property>
-                        <property name="cursor">
-                         <cursorShape>PointingHandCursor</cursorShape>
-                        </property>
-                        <property name="statusTip">
-                         <string extracomment="click"/>
-                        </property>
-                        <property name="text">
-                         <string>查看RGB图像</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QPushButton" name="rgbSaveBtn">
-                        <property name="enabled">
-                         <bool>false</bool>
-                        </property>
-                        <property name="cursor">
-                         <cursorShape>PointingHandCursor</cursorShape>
-                        </property>
-                        <property name="text">
-                         <string>保存</string>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer_6">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_2">
+             <layout class="QHBoxLayout" name="horizontalLayout_23">
+              <item>
+               <widget class="QFrame" name="frame_4">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_5">
                  <item>
-                  <widget class="QFrame" name="frame_6">
-                   <property name="styleSheet">
-                    <string notr="true"/>
-                   </property>
+                  <widget class="QFrame" name="frame_5">
                    <property name="frameShape">
                     <enum>QFrame::StyledPanel</enum>
                    </property>
                    <property name="frameShadow">
                     <enum>QFrame::Raised</enum>
                    </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_6">
+                   <layout class="QHBoxLayout" name="horizontalLayout_18">
                     <item>
-                     <widget class="QPushButton" name="showHsiInfoBtn">
-                      <property name="enabled">
-                       <bool>true</bool>
-                      </property>
-                      <property name="cursor">
-                       <cursorShape>PointingHandCursor</cursorShape>
-                      </property>
-                      <property name="text">
-                       <string>显示高光谱图像信息</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout">
+                     <layout class="QVBoxLayout" name="verticalLayout">
                       <item>
-                       <widget class="QLabel" name="label_2">
-                        <property name="styleSheet">
-                         <string notr="true">Border:None;</string>
-                        </property>
-                        <property name="text">
-                         <string>图像长度：</string>
-                        </property>
-                       </widget>
+                       <layout class="QHBoxLayout" name="horizontalLayout_14">
+                        <item>
+                         <widget class="QPushButton" name="impRawBtn">
+                          <property name="font">
+                           <font>
+                            <family>Agency FB</family>
+                            <pointsize>12</pointsize>
+                            <weight>50</weight>
+                            <italic>false</italic>
+                            <bold>false</bold>
+                           </font>
+                          </property>
+                          <property name="cursor">
+                           <cursorShape>PointingHandCursor</cursorShape>
+                          </property>
+                          <property name="statusTip">
+                           <string/>
+                          </property>
+                          <property name="text">
+                           <string>导入单张原始照片</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="horizontalSpacer_2">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>40</width>
+                            <height>20</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="impRawsBtn">
+                          <property name="font">
+                           <font>
+                            <family>Agency FB</family>
+                            <pointsize>12</pointsize>
+                            <weight>50</weight>
+                            <italic>false</italic>
+                            <bold>false</bold>
+                           </font>
+                          </property>
+                          <property name="cursor">
+                           <cursorShape>PointingHandCursor</cursorShape>
+                          </property>
+                          <property name="text">
+                           <string>导入多张原始照片</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </item>
                       <item>
-                       <spacer name="horizontalSpacer">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                        <property name="sizeHint" stdset="0">
-                         <size>
-                          <width>28</width>
-                          <height>20</height>
-                         </size>
-                        </property>
-                       </spacer>
+                       <layout class="QHBoxLayout" name="horizontalLayout_15">
+                        <item>
+                         <widget class="QLabel" name="label">
+                          <property name="styleSheet">
+                           <string notr="true">Border: none</string>
+                          </property>
+                          <property name="text">
+                           <string>文件路径：</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="rawHSIPathlineEdit">
+                          <property name="text">
+                           <string>高光谱图像数据文件路径</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </item>
                       <item>
-                       <widget class="QLineEdit" name="lenShowBtn">
-                        <property name="styleSheet">
-                         <string notr="true">font: 12pt &quot;Times New Roman&quot;;</string>
-                        </property>
-                        <property name="text">
-                         <string>NAN</string>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_2">
-                      <item>
-                       <widget class="QLabel" name="label_3">
-                        <property name="styleSheet">
-                         <string notr="true">Border:None;</string>
-                        </property>
-                        <property name="text">
-                         <string>图像宽度：</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <spacer name="horizontalSpacer_8">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                        <property name="sizeHint" stdset="0">
-                         <size>
-                          <width>28</width>
-                          <height>20</height>
-                         </size>
-                        </property>
-                       </spacer>
+                       <layout class="QHBoxLayout" name="horizontalLayout_22">
+                        <item>
+                         <widget class="QPushButton" name="impBRFImgBtn">
+                          <property name="font">
+                           <font>
+                            <family>Agency FB</family>
+                            <pointsize>12</pointsize>
+                            <weight>50</weight>
+                            <italic>false</italic>
+                            <bold>false</bold>
+                           </font>
+                          </property>
+                          <property name="cursor">
+                           <cursorShape>PointingHandCursor</cursorShape>
+                          </property>
+                          <property name="statusTip">
+                           <string/>
+                          </property>
+                          <property name="text">
+                           <string>导入反射板照片</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QToolButton" name="selectBoxBtn">
+                          <property name="text">
+                           <string>框选</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </item>
                       <item>
-                       <widget class="QLineEdit" name="widthShowBtn">
-                        <property name="styleSheet">
-                         <string notr="true">font: 12pt &quot;Times New Roman&quot;;</string>
-                        </property>
-                        <property name="text">
-                         <string>NAN</string>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_3">
-                      <item>
-                       <widget class="QLabel" name="label_4">
-                        <property name="styleSheet">
-                         <string notr="true">Border:None;</string>
-                        </property>
-                        <property name="text">
-                         <string>图像波段：</string>
-                        </property>
-                       </widget>
+                       <layout class="QHBoxLayout" name="horizontalLayout_19">
+                        <item>
+                         <widget class="QLabel" name="label_9">
+                          <property name="styleSheet">
+                           <string notr="true">Border: none</string>
+                          </property>
+                          <property name="text">
+                           <string>文件路径：</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="BRFPathlineEdit">
+                          <property name="text">
+                           <string>反射板图像数据文件路径</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </item>
                       <item>
-                       <spacer name="horizontalSpacer_9">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                        <property name="sizeHint" stdset="0">
-                         <size>
-                          <width>28</width>
-                          <height>20</height>
-                         </size>
-                        </property>
-                       </spacer>
-                      </item>
-                      <item>
-                       <widget class="QLineEdit" name="wlShowBtn">
-                        <property name="styleSheet">
-                         <string notr="true">font: 12pt &quot;Times New Roman&quot;;</string>
-                        </property>
-                        <property name="text">
-                         <string>NAN</string>
-                        </property>
-                       </widget>
+                       <layout class="QHBoxLayout" name="horizontalLayout_13">
+                        <item>
+                         <widget class="QPushButton" name="rgbGeneBtn">
+                          <property name="text">
+                           <string>处理</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="rgbSaveBtn">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="cursor">
+                           <cursorShape>PointingHandCursor</cursorShape>
+                          </property>
+                          <property name="text">
+                           <string>保存</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="rgbViewBtn">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="cursor">
+                           <cursorShape>PointingHandCursor</cursorShape>
+                          </property>
+                          <property name="statusTip">
+                           <string extracomment="click"/>
+                          </property>
+                          <property name="text">
+                           <string>查看RGB图像</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </item>
                      </layout>
                     </item>
                    </layout>
                   </widget>
                  </item>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_2">
+                   <item>
+                    <widget class="QFrame" name="frame_6">
+                     <property name="styleSheet">
+                      <string notr="true"/>
+                     </property>
+                     <property name="frameShape">
+                      <enum>QFrame::StyledPanel</enum>
+                     </property>
+                     <property name="frameShadow">
+                      <enum>QFrame::Raised</enum>
+                     </property>
+                     <layout class="QVBoxLayout" name="verticalLayout_6">
+                      <item>
+                       <widget class="QPushButton" name="showHsiInfoBtn">
+                        <property name="enabled">
+                         <bool>true</bool>
+                        </property>
+                        <property name="cursor">
+                         <cursorShape>PointingHandCursor</cursorShape>
+                        </property>
+                        <property name="text">
+                         <string>显示高光谱图像信息</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout">
+                        <item>
+                         <widget class="QLabel" name="label_2">
+                          <property name="styleSheet">
+                           <string notr="true">Border:None;</string>
+                          </property>
+                          <property name="text">
+                           <string>图像长度：</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="horizontalSpacer">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>28</width>
+                            <height>20</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="lenShowBtn">
+                          <property name="styleSheet">
+                           <string notr="true">font: 12pt &quot;Times New Roman&quot;;</string>
+                          </property>
+                          <property name="text">
+                           <string>NAN</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_2">
+                        <item>
+                         <widget class="QLabel" name="label_3">
+                          <property name="styleSheet">
+                           <string notr="true">Border:None;</string>
+                          </property>
+                          <property name="text">
+                           <string>图像宽度：</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="horizontalSpacer_8">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>28</width>
+                            <height>20</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="widthShowBtn">
+                          <property name="styleSheet">
+                           <string notr="true">font: 12pt &quot;Times New Roman&quot;;</string>
+                          </property>
+                          <property name="text">
+                           <string>NAN</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_3">
+                        <item>
+                         <widget class="QLabel" name="label_4">
+                          <property name="styleSheet">
+                           <string notr="true">Border:None;</string>
+                          </property>
+                          <property name="text">
+                           <string>图像波段：</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="horizontalSpacer_9">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>28</width>
+                            <height>20</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="wlShowBtn">
+                          <property name="styleSheet">
+                           <string notr="true">font: 12pt &quot;Times New Roman&quot;;</string>
+                          </property>
+                          <property name="text">
+                           <string>NAN</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <spacer name="verticalSpacer_6">
+                        <property name="orientation">
+                         <enum>Qt::Vertical</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>20</width>
+                          <height>40</height>
+                         </size>
+                        </property>
+                       </spacer>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
                 </layout>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QFrame" name="frame_7">
-              <property name="geometry">
-               <rect>
-                <x>520</x>
-                <y>30</y>
-                <width>391</width>
-                <height>381</height>
-               </rect>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_20">
-               <item>
-                <widget class="QLabel" name="label_10">
-                 <property name="text">
-                  <string>Image</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGraphicsView" name="hsiRawView"/>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>
