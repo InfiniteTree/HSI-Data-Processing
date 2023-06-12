@@ -1,17 +1,20 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QGraphicsPixmapItem
-from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem
+from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal
 
 import sys
 import os
-import cv2
+import csv
+import numpy as np
 import matplotlib.pyplot as plt
 
 from MainWindow import Ui_MainWindow
 import ReadData
 import RemoveBG
 import RemoveDB
+import GetReflectance as gr
 
 
 
@@ -31,6 +34,17 @@ class Main(QMainWindow, Ui_MainWindow):
     rawsHdrFile_path = "" # The abs path of the raw hdr files
     BRFSpeFile_path = "" # The abs path of the reference board spe file
     BRFHdrFile_path = "" # The abs path of the reference board hdr file
+
+
+    # Data recording for selection rectangular
+    scene = None
+    selecting = False
+    selection_rect = None
+    selection_start = None
+    selection_end = None
+
+    BRF3_pos_range = [] # [BRF3%] [[3_x0,3_y0],[3_x1,3_y1]]
+    BRF30_pos_range = [] # [BRF30%] [[30_x0,30_y0],[30_x1,30_y1]]
 
     # Data for single Hyperspectra image
     raw_HSI_info = []
@@ -55,6 +69,11 @@ class Main(QMainWindow, Ui_MainWindow):
     # Threshold value of amplititude of the hyperspectra to eliminate
     ampl_LowTH = 0
     ampl_HighTH = 4095
+
+    BRFfile_paths = [] # ["3%BRF_filename", "30%BRF_filename"]
+
+    # The proportion is initially set as 1
+    cur_proportion = 1
     
 
     ###-------------------------------------------The End line---------------------------------------------------###
@@ -67,6 +86,9 @@ class Main(QMainWindow, Ui_MainWindow):
         QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
+
+        self.previousPage = None
+
         # ------------------------------------Tab1------------------------------------
         # Part 1. Show the raw data
         # Import the single raw HSI file
@@ -79,8 +101,12 @@ class Main(QMainWindow, Ui_MainWindow):
         # Import the BRF HSI files
         self.impBRFImgBtn.clicked.connect(self.importBRFImg)
         
-        # Mouse box selection
-        self.selectBoxBtn.clicked.connect(self.selectBox)
+        # Mouse box selection for 3% board
+        self.selectBox3Btn.clicked.connect(lambda: self.selectBox("3"))
+
+        # Mouse box selection for 30% board
+        self.selectBox30Btn.clicked.connect(lambda: self.selectBox("30"))
+
 
         # Read the raw file
         self.rgbGeneBtn.clicked.connect(lambda:self.getRgb("Gene"))
@@ -88,6 +114,13 @@ class Main(QMainWindow, Ui_MainWindow):
         self.rgbViewBtn.clicked.connect(lambda:self.getRgb("View"))
         # Save the raw rgb file
         self.rgbSaveBtn.clicked.connect(lambda:self.getRgb("Save"))
+
+        # Read the raw BRF file
+        self.BRFRawGeneBtn.clicked.connect(lambda:self.getBRFRgb("Gene"))
+        # show the raw BRF file
+        self.BRFRawViewBtn.clicked.connect(lambda:self.getBRFRgb("View"))
+        # Save the raw BRF file
+        self.BRFRawSaveBtn.clicked.connect(lambda:self.getBRFRgb("Save"))
 
         self.showHsiInfoBtn.clicked.connect(self.showHsiInfo)
 
@@ -112,9 +145,10 @@ class Main(QMainWindow, Ui_MainWindow):
         self.RmBtSaveBtn.clicked.connect(lambda: self.RmDb("Save", "BT"))
 
         # Get the reflectance
-        self.RefGeneBtn.clicked.connect(lambda: self.Ref("Gene"))
-        self.RefViewBtn.clicked.connect(lambda: self.Ref("View"))
-        self.RefSaveBtn.clicked.connect(lambda: self.Ref("Save"))
+        self.importRftCaliFileBtn.clicked.connect(self.importRftCaliFile)
+        self.RefGeneBtn.clicked.connect(lambda: self.getReflect("Gene"))
+        self.RefViewBtn.clicked.connect(lambda: self.getReflect("View"))
+        self.RefSaveBtn.clicked.connect(lambda: self.getReflect("Save"))
 
     ######----------------------------------------------------------------------------------------------------######
     #####-------------------------------------Helper Function start here---------------------------------------#####
@@ -133,27 +167,22 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def importRaws(self):  
         file_dialog = QFileDialog()
-        # Select file/files according to the flag 
         selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
         if selected_directory:
             file_names = os.listdir(selected_directory)
-            print(file_names)
+            #print(file_names)
         
 
     def importBRFImg(self):
         selected_file, _ = QFileDialog.getOpenFileName(QMainWindow(), '选择文件', '', '.spe(*.spe*)')
         if selected_file:
             self.BRFSpeFile_path = selected_file
-            self.BRFSpeFile_path = self.rawSpeFile_path.replace("\\","/")
-            self.BRFPathlineEdit.setText(self.rawSpeFile_path)
+            self.BRFSpeFile_path = self.BRFSpeFile_path.replace("\\","/")
+            self.BRFPathlineEdit.setText(self.BRFSpeFile_path)
             
-            self.BRFHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
-            self.BRF_HSI_info = ReadData.ReadData(self.BRFHdrFile_path,self.BRFSpeFile_path, 1)
-        return
-    
-    def selectBox(self):
+            self.BRFHdrFile_path = self.BRFSpeFile_path.replace(".spe",".hdr")
+            
         
-        return
 
     def getRgb(self, function):
         match function:
@@ -175,20 +204,56 @@ class Main(QMainWindow, Ui_MainWindow):
                     frame = QImage(self.rawjpgFile_path)
                     pix = QPixmap.fromImage(frame)
                     item = QGraphicsPixmapItem(pix)
-                    scene = QGraphicsScene()
-                    scene.addItem(item)
-                    self.hsiRawView.setScene(scene)
-                    '''
-                    self.rgbImg = ReadData.drawImg(self.HSI_info)
-                    self.rgbImg.show()
-                    '''
+                    # the rgb scene in Tab1
+                    self.scene = QGraphicsScene()
+                    self.scene.addItem(item)
+                    self.hsiRawView.setScene(self.scene)
+
             case "Save":
                 if self.rawSpeFile_path != "":
                     self.rgbImg = ReadData.drawImg(self.HSI_info)
                     self.rgbImg.save("figures/test/raw" + str(self.impFileNum) + ".jpg")
                     QtWidgets.QMessageBox.about(self, "", "高光谱可视化数据保存成功")
 
+    def getBRFRgb(self, function):
+        match function:
+            case "Gene":
+                self.HSI_info = ReadData.ReadData(self.BRFHdrFile_path,self.BRFSpeFile_path, 1)
+                self.HSI_length = self.HSI_info[0]
+                self.HSI_wl = self.HSI_info[1]
+                self.HSI_width = self.HSI_info[2]
+                self.HSI = self.HSI_info[3]
+                self.wavelength = self.HSI_info[4]
+                # Unlock the view and Save function
+                self.BRFRawViewBtn.setEnabled(True)
+                self.BRFRawSaveBtn.setEnabled(True)
+                QtWidgets.QMessageBox.about(self, "", "高光谱反射板处理成功")
 
+            case "View":
+                if self.BRFSpeFile_path != "":                     
+                    self.rawjpgFile_path = "figures/test/raw" + str(self.impFileNum) + ".jpg"
+                    frame = QImage(self.rawjpgFile_path)
+                    pix = QPixmap.fromImage(frame)
+                    item = QGraphicsPixmapItem(pix)
+                    # the rgb scene in Tab1
+                    self.scene = QGraphicsScene()
+                    self.scene.addItem(item)
+                    self.hsiRawView.setScene(self.scene)
+
+            case "Save":
+                if self.BRFSpeFile_path != "":
+                    self.rgbImg = ReadData.drawImg(self.HSI_info)
+                    self.rgbImg.save("figures/test/raw" + str(self.impFileNum) + ".jpg")
+                    QtWidgets.QMessageBox.about(self, "", "高光谱反射板可视化保存成功")
+
+    def selectBox(self, brf_flag):
+        self.view = hsiRawView(self.scene, brf_flag)
+        #self.setCentralWidget(self.view)
+        self.view.show()
+        self.view.resize(600, 800)
+        self.view.startSelection()
+
+        
     def showHsiInfo(self):
         self.lenShowBtn.setText(str(self.HSI_length)+" pix")
         self.widthShowBtn.setText(str(self.HSI_width)+" pix")
@@ -217,6 +282,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 # Unlock the view and Save function
                 self.RmBgViewBtn.setEnabled(True)
                 self.RmBgSaveBtn.setEnabled(True)
+                QtWidgets.QMessageBox.about(self, "", "NDVI背景处理成功")
 
             case "View":
                 fig, ax = plt.subplots(figsize=(6, 8))
@@ -231,6 +297,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 ax.set_title("Pseudo_Color Map of the Relative Values on NDVI", y=1.05)
                 fig.colorbar(im)
                 fig.savefig("figures/test/pre_process/" + str(self.impFileNum) + "_level1.jpg")
+                QtWidgets.QMessageBox.about(self, "", "NDVI背景生成成功")
                 
     
     # Remove the too bright and to dark img
@@ -272,12 +339,129 @@ class Main(QMainWindow, Ui_MainWindow):
                         l1_rgbImg.save("figures/test/pre_process/"+ self.impFileNum +"_level2_2.jpg")
 
 
+    # import the amplititude along diferent wavelengths of 3% and 30% BRF
+    def importRftCaliFile(self):
+        file_dialog = QFileDialog()
+        selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
+        if selected_directory:
+            BRFfile_names = os.listdir(selected_directory)
+            BRFfile_names = [item.replace("\\","/") for item in BRFfile_names]
+            selected_directory = selected_directory.replace("\\","/")
+            self.BRFCaliPathlineEdit.setText(selected_directory)
+            
+            self.BRFfile_paths = [selected_directory + "/" + item for item in BRFfile_names]
+ 
+    def getReflect(self, function):
+        match function:        
+            case "Gene":
+                reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths)
+                ReflectMatrix = reflect.getReflectMatrix()
+                avg_reflect = reflect.getLeafAvgReflect(ReflectMatrix)
+                #print(avg_reflect)
+
+                # Write the reflectvector into a local csv file
+                wavelengths = self.HSI_info[4]
+                FirstRow = wavelengths
+                ReflectRow = avg_reflect
+                with open("Results/test/ReflectCurve.csv","w",newline='') as f:
+                    writer = csv.writer(f)
+                    # Write the first row
+                    writer.writerow(FirstRow)
+                    # Write the remaining rows
+                    writer.writerow(ReflectRow)
+
+                # Plotting
+                x = np.array(self.HSI_info[4])
+                y = np.array(avg_reflect)
+                plt.plot(x,y,c='b',label='Curve_poly_Fit')
+                #plt.xticks(range(400, 1000, 100))
+                plt.title("The Reflectance curve")
+                plt.savefig("Results/test/Reflectance_curve_new.jpg")
+                plt.show()
+
+
+                # Unlock the view and Save function
+                self.RefViewBtn.setEnabled(True)
+                self.RefSaveBtn.setEnabled(True)
+                QtWidgets.QMessageBox.about(self, "", "反射率校准处理成功")
+
+            case "View":
+                return
+
+            case "Save":
+                return
+
+
+
 
 
     # ----------------------------Tab3-----------------------------
 
 
     # ----------------------------Tab4-----------------------------
+
+
+class hsiRawView(QGraphicsView):
+    def __init__(self, scene, brf_flag):
+        super().__init__(scene)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
+        self.selection_rect = None
+        self.selecting = False
+        self.BRF_flag = brf_flag
+
+    def startSelection(self):
+        self.selecting = True
+        self.selection_rect = QGraphicsRectItem()
+        if self.BRF_flag == "3":
+            self.selection_rect.setPen(Qt.blue)
+        if self.BRF_flag == "30":
+            self.selection_rect.setPen(Qt.red)
+        self.scene().addItem(self.selection_rect)
+
+    def stopSelection(self):
+        if self.selection_rect is not None:
+            selected_items = self.scene().items(self.selection_rect.rect(), Qt.IntersectsItemShape)
+
+            # print x and y
+            rect = self.selection_rect.rect()
+
+            if self.BRF_flag == "3":
+                BRF3_x0 = int(rect.x())
+                BRF3_y0 = int(rect.y())
+                BRF3_x1 = int(BRF3_x0 + rect.width())
+                BRF3_y1 = int(BRF3_y0 + rect.height())
+                md.BRF3_pos_range = [[BRF3_x0,BRF3_y0],[BRF3_x1, BRF3_y1]]
+                
+            
+            elif self.BRF_flag == "30":
+                BRF30_x0 = int(rect.x())
+                BRF30_y0 = int(rect.y())
+                BRF30_x1 = int(BRF30_x0 + rect.width())
+                BRF30_y1 = int(BRF30_y0 + rect.height())
+                md.BRF30_pos_range = [[BRF30_x0,BRF30_y0],[BRF30_x1, BRF30_y1]]
+                
+            #self.scene().removeItem(self.selection_rect)
+            self.selection_rect = None
+        self.selecting = False
+
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self.selecting:
+            pos_in_view = event.pos()
+            pos_in_scene = self.mapToScene(pos_in_view)
+            self.selection_rect.setRect(QRectF(pos_in_scene, pos_in_scene))
+            self.scene().addItem(self.selection_rect)
+
+    def mouseMoveEvent(self, event):
+        if self.selecting and self.selection_rect is not None:
+            pos_in_view = event.pos()
+            pos_in_scene = self.mapToScene(pos_in_view)
+            rect = QRectF(self.selection_rect.rect().topLeft(), pos_in_scene)
+            self.selection_rect.setRect(rect.normalized())
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton and self.selecting:
+            self.stopSelection()
 
 
 if __name__ == "__main__":

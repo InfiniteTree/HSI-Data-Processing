@@ -1,9 +1,6 @@
 import ReadData
 import numpy as np
 from PIL import Image
-import setting
-
-
 
 class level1:
     NDVI_TH = 0.8
@@ -12,7 +9,7 @@ class level1:
     band800 = 195
     band670 = 134
     
-    def __init__(self, hsiInfo, ndviTh ):
+    def __init__(self, hsiInfo, ndviTh):
         self.NDVI_TH = ndviTh
         self.HSI_info = hsiInfo
 

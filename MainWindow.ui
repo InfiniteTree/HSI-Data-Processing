@@ -86,7 +86,7 @@ font: 12pt &quot;Agency FB&quot;;
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
-             <layout class="QHBoxLayout" name="horizontalLayout_23">
+             <layout class="QHBoxLayout" name="horizontalLayout_25">
               <item>
                <widget class="QFrame" name="frame_4">
                 <property name="frameShape">
@@ -187,6 +187,46 @@ font: 12pt &quot;Agency FB&quot;;
                        </layout>
                       </item>
                       <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_13">
+                        <item>
+                         <widget class="QPushButton" name="rgbGeneBtn">
+                          <property name="text">
+                           <string>处理</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="rgbSaveBtn">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="cursor">
+                           <cursorShape>PointingHandCursor</cursorShape>
+                          </property>
+                          <property name="text">
+                           <string>保存</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="rgbViewBtn">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="cursor">
+                           <cursorShape>PointingHandCursor</cursorShape>
+                          </property>
+                          <property name="statusTip">
+                           <string extracomment="click"/>
+                          </property>
+                          <property name="text">
+                           <string>查看RGB图像</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
                        <layout class="QHBoxLayout" name="horizontalLayout_22">
                         <item>
                          <widget class="QPushButton" name="impBRFImgBtn">
@@ -211,9 +251,16 @@ font: 12pt &quot;Agency FB&quot;;
                          </widget>
                         </item>
                         <item>
-                         <widget class="QToolButton" name="selectBoxBtn">
+                         <widget class="QToolButton" name="selectBox3Btn">
                           <property name="text">
-                           <string>框选</string>
+                           <string>框选3%BRF</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QToolButton" name="selectBox30Btn">
+                          <property name="text">
+                           <string>框选30%BRF</string>
                           </property>
                          </widget>
                         </item>
@@ -241,16 +288,16 @@ font: 12pt &quot;Agency FB&quot;;
                        </layout>
                       </item>
                       <item>
-                       <layout class="QHBoxLayout" name="horizontalLayout_13">
+                       <layout class="QHBoxLayout" name="horizontalLayout_23">
                         <item>
-                         <widget class="QPushButton" name="rgbGeneBtn">
+                         <widget class="QPushButton" name="BRFRawGeneBtn">
                           <property name="text">
                            <string>处理</string>
                           </property>
                          </widget>
                         </item>
                         <item>
-                         <widget class="QPushButton" name="rgbSaveBtn">
+                         <widget class="QPushButton" name="BRFRawSaveBtn">
                           <property name="enabled">
                            <bool>false</bool>
                           </property>
@@ -263,7 +310,7 @@ font: 12pt &quot;Agency FB&quot;;
                          </widget>
                         </item>
                         <item>
-                         <widget class="QPushButton" name="rgbViewBtn">
+                         <widget class="QPushButton" name="BRFRawViewBtn">
                           <property name="enabled">
                            <bool>false</bool>
                           </property>
@@ -445,7 +492,11 @@ font: 12pt &quot;Agency FB&quot;;
                </widget>
               </item>
               <item>
-               <widget class="QGraphicsView" name="hsiRawView"/>
+               <layout class="QHBoxLayout" name="horizontalLayout_24">
+                <item>
+                 <widget class="QGraphicsView" name="hsiRawView"/>
+                </item>
+               </layout>
               </item>
              </layout>
             </widget>
@@ -478,7 +529,7 @@ font: 12pt &quot;Agency FB&quot;;</string>
              <x>30</x>
              <y>20</y>
              <width>441</width>
-             <height>421</height>
+             <height>441</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -789,6 +840,27 @@ font: 12pt &quot;Agency FB&quot;;</string>
                 </property>
                 <property name="text">
                  <string>导入反射率校准文件</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_20">
+              <item>
+               <widget class="QLabel" name="label_10">
+                <property name="styleSheet">
+                 <string notr="true">Border: none</string>
+                </property>
+                <property name="text">
+                 <string>文件夹路径：</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="BRFCaliPathlineEdit">
+                <property name="text">
+                 <string>反射板校准文件路径</string>
                 </property>
                </widget>
               </item>

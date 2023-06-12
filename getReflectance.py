@@ -7,207 +7,193 @@ import ReadData
 import RemoveBG
 import RemoveDB
 
-def getReferAmplititudes(HSI_info, positionRange):
-    channels = HSI_info[1]
-    HSI = HSI_info[3]
-    #positionRange  i.e. (860,83),(890,120) for 3% Ref Board
-    Amplititudes = []
-    RefHSI = HSI[positionRange[0][0]:positionRange[1][0],:,positionRange[0][1]:positionRange[1][1]]
-    for i in range(channels):
-        Amplititudes.append(np.array(RefHSI[:,i,:]).mean())
-    #print(Amplititudes)
-    
-    return Amplititudes
+class Reflectance:
+    HSI_info = []
+    cur_proportion = 1
+    BRF_positionRange = []  # position range of the refer board
+    BRF_files = "" # path location fo the 3% and 30% Refer board Cali files
+
+    def __init__(self, HSI_info, cur_proportion, BRF_positionRange, brf_files):
+        self.HSI_info = HSI_info
+        #print(self.HSI_info)
+        self.cur_proportion = cur_proportion
+        self.BRF_positionRange = BRF_positionRange
+        self.BRF_files = brf_files
+        #print(self.BRF_positionRange)
 
 
-def writeRef(filename, wavelengths, RefAmplititudes1, RefAmplititudes2):
-    with open(filename, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(wavelengths)
-        writer.writerow(RefAmplititudes1)
-        writer.writerow(RefAmplititudes2)
+    def getReferAmplititudes(self, BRF_flag):
+        channels = self.HSI_info[1]
+        HSI = self.HSI_info[3]
+        #positionRange  i.e. (860,83),(890,120) for 3% Ref Board
+        Amplititudes = []
 
-def readRef(filename):
-    with open(filename,"r") as f:
-        raw = f.readlines()
-        str = ""
-        str = ','.join(raw)
-        str = str.replace("\n","").replace("波长,反射率(%)","").replace("波长","").replace("反射率%","").replace(" ","")
-        str = str.split(",")
-        result_list = [x for x in str if x != '']
-        #print("Now is",result_list)
-        waves = [float(x) for x in result_list[0::2]] 
-        reflect = [float(x) for x in result_list[1::2]] 
-    return waves,reflect
-
-def mapRef(inputfile, outputfile,lineNum):
-    X, Y = [], []
-
-    Read_info = readRef(outputfile)
-    waves = Read_info[0] 
-    k = 0
-    with open(inputfile, "r") as f1:
-        contents = f1.readlines()
-        RefWaves = [float(items) for items in contents[0].split(",")]
-        RefReflect = [float(items) for items in contents[lineNum].split(",")]
-
-    #print (contents[0])
-    #print("------\n",contents[1])
-        channels = 300
-        num = 60
-        #print("RefWaves is",RefWaves)
-        #print("waves is", waves)
+        if BRF_flag == "3":
+            RefHSI = HSI[self.BRF_positionRange[0][0][1]:self.BRF_positionRange[0][1][1],:,self.BRF_positionRange[0][0][0]:self.BRF_positionRange[0][1][0]]
+        elif BRF_flag == "30":
+             RefHSI = HSI[self.BRF_positionRange[1][0][1]:self.BRF_positionRange[1][1][1],:,self.BRF_positionRange[1][0][0]:self.BRF_positionRange[1][1][0]]
+        
         for i in range(channels):
-            for k in range(num):
-                if abs(RefWaves[i] - waves[k]) < 1:
-                    X.append(RefReflect[i])
-                    #print(Read_info[1])
-                    Y.append(Read_info[1][k]/100)
-                
-    return X, Y
+            Amplititudes.append(np.array(RefHSI[:,i,:]).mean())
 
-def getReflectEquation(HSI_info):
-    channels = HSI_info[1]
-    RefAmplititudes_file ="Results/RefAmplititudes.csv"
-    #print("------------3Ref----------")
-    refSample1= mapRef(RefAmplititudes_file, "RefBoard/3Ref.csv", 1)
-    X1 = refSample1[0]
-    Y1 = refSample1[1]
-    '''
-    print("-----------------X1-------------------")
-    print(X1)
-    print("-----------------Y1-------------------")
-    print(Y1)
-    '''
-    #print("------------30Ref----------")
-
-    refSample2 = mapRef(RefAmplititudes_file, "RefBoard/30Ref.csv", 2)
-
-    X2 = refSample2[0]
-    Y2 = refSample2[1] 
-    '''
-    print("-----------------X2-------------------")
-    print(X2)
-    print("-----------------Y2-------------------")
-    print(Y2)
-    '''
-
-    # get the vector of k and b
-    num = len(X2)
-    k, b = [], []
-
-    for i in range(num):
-        k.append((Y2[i] - Y1[i]) / (X2[i] - X1[i]))
-        b.append(Y1[i] - k[i]*X1[i])
-    '''
-    print("-----------------k-------------------")
-    print(k)
-    print("-----------------b-------------------")
-    print(b)
-    '''
-    
-    # Now length of k, b is 57
-    # we need 300 k,b
-    # For the rest of k,b we can use interpolation algorithm to get the rest of them
-    k = interpolate_list(k, channels)
-    b = interpolate_list(b, channels)
-    # Need to be checked here!!!
-    return k,b
+        return Amplititudes
 
 
-def getReflectance(HSI_info, proportion_2, k, b):
-    HSI = HSI_info[3]
-    lines =  HSI_info[0]
-    channels = HSI_info[1]
-    samples = HSI_info[2]
-    wavelengths = HSI_info[4]
+    def writeRef(self, filename, wavelengths, RefAmplititudes1, RefAmplititudes2):
+        with open(filename, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(wavelengths)
+            writer.writerow(RefAmplititudes1)
+            writer.writerow(RefAmplititudes2)
 
-    ReflectMatrix = np.zeros((lines, channels, samples))
-    #print(ReflectMatrix.shape)
+    def readRef(self, filename):
+        with open(filename,"r") as f:
+            raw = f.readlines()
+            str = ""
+            str = ','.join(raw)
+            str = str.replace("\n","").replace("波长,反射率(%)","").replace("波长","").replace("反射率%","").replace(" ","")
+            str = str.split(",")
+            result_list = [x for x in str if x != '']
+            #print("Now is",result_list)
+            waves = [float(x) for x in result_list[0::2]] 
+            reflect = [float(x) for x in result_list[1::2]] 
+        return waves,reflect
 
-    for idx in range(channels):
-        ReflectMatrix[:, idx, :] = (HSI[:, idx, :] * k[idx] + b[idx]) * proportion_2 ### errors remian here
-    
-    #print(ReflectMatrix.shape)
-    print("ReflectMatrix is obtained.")
-    return ReflectMatrix
+    def mapRef(self, inputfile, outputfile, lineNum):
+        X, Y = [], []
+
+        Read_info = self.readRef(outputfile)
+        waves = Read_info[0] 
+        k = 0
+        with open(inputfile, "r") as f1:
+            contents = f1.readlines()
+            RefWaves = [float(items) for items in contents[0].split(",")]
+            RefReflect = [float(items) for items in contents[lineNum].split(",")]
+
+        #print (contents[0])
+        #print("------\n",contents[1])
+            channels = 300
+            num = 60
+            #print("RefWaves is",RefWaves)
+            #print("waves is", waves)
+            for i in range(channels):
+                for k in range(num):
+                    if abs(RefWaves[i] - waves[k]) < 1:
+                        X.append(RefReflect[i])
+                        #print(Read_info[1])
+                        Y.append(Read_info[1][k]/100)
+                    
+        return X, Y
+
+    def getReflectEquation(self):
+        channels = self.HSI_info[1]
+        RefAmplititudes_file ="Results/test/RefAmplititudes.csv"
+        #print("------------3Ref----------")
+        refSample1= self.mapRef(RefAmplititudes_file, self.BRF_files[0], 1)
+        X1 = refSample1[0]
+        Y1 = refSample1[1]
+        '''
+        print("-----------------X1-------------------")
+        print(X1)
+        print("-----------------Y1-------------------")
+        print(Y1)
+        '''
+        #print("------------30Ref----------")
+
+        refSample2 = self.mapRef(RefAmplititudes_file, self.BRF_files[1], 2)
+
+        X2 = refSample2[0]
+        Y2 = refSample2[1] 
+        '''
+        print("-----------------X2-------------------")
+        print(X2)
+        print("-----------------Y2-------------------")
+        print(Y2)
+        '''
+
+        # get the vector of k and b
+        num = len(X2)
+        k, b = [], []
+
+        for i in range(num):
+            k.append((Y2[i] - Y1[i]) / (X2[i] - X1[i]))
+            b.append(Y1[i] - k[i]*X1[i])
+        '''
+        print("-----------------k-------------------")
+        print(k)
+        print("-----------------b-------------------")
+        print(b)
+        '''
+        
+        # Now length of k, b is 57
+        # we need 300 k,b
+        # For the rest of k,b we can use interpolation algorithm to get the rest of them
+        k = self.interpolate_list(k, channels)
+        b = self.interpolate_list(b, channels)
+        # Need to be checked here!!!
+        return k,b
 
 
-# interpolation algorithm to come up with the rest of k,b
-def interpolate_list(input_list, output_length):
-    # x-axis raw_Data
-    x = np.linspace(0, 1, len(input_list))
-    # use the interpolation function
-    f = interp1d(x, input_list, kind='linear')
-    # make the output x
-    output_x = np.linspace(0, 1, output_length)
-    # interpolate
-    output_list = f(output_x)
-    
-    return output_list.tolist()
+    def getReflectance(self, k, b):
+        HSI = self.HSI_info[3]
+        lines =  self.HSI_info[0]
+        channels = self.HSI_info[1]
+        samples = self.HSI_info[2]
+        wavelengths = self.HSI_info[4]
 
-def getRefBoard(HSI_info,positionRange1,positionRange2):
-    wavelengths = HSI_info[4]
-    #"------------For the 3% Ref Board------------")
-    three_RefAmplititudes = getReferAmplititudes(HSI_info, positionRange1)
-    #"------------For the 30% Ref Board------------")
-    thirty_RefAmplititudes = getReferAmplititudes(HSI_info, positionRange2)
-    RefAmplititudes_file ="Results/RefAmplititudes.csv"
-    writeRef(RefAmplititudes_file, wavelengths, three_RefAmplititudes, thirty_RefAmplititudes)
+        ReflectMatrix = np.zeros((lines, channels, samples))
+        #print(ReflectMatrix.shape)
 
-def getLeafAvgReflect(ReflectMatrix):
-    AvgReflect = ReflectMatrix.mean(axis=(0,2))
-    return AvgReflect
-
-def getReflectMatrix(HSI_info, proportion):
-    # Part 1. Get the reference Board Amplititudes
-    Ref_HSI_info = ReadData.ReadRef()
-
-    positionRange1 = [[870,205],[880,215]] # The right black board with more degree of darkness(r=3%)
-    positionRange2 = [[870,95],[880,105]] # The left black board with less degree of darkness(r=30%)
-    getRefBoard(Ref_HSI_info, positionRange1, positionRange2)
-    equation = getReflectEquation(Ref_HSI_info)
-    k = equation[0]
-    b = equation[1]
-
-    # Part 2. Map the RefBoard Amplititudes with the reflections
-    # Read the particular plot image
-    HSI_info_L2, proportion_2 = HSI_info, proportion
-    #print(proportion_2)
-    # Level 3. Get the HSI reflectances
-    ReflectMatrix = getReflectance(HSI_info_L2, proportion_2, k, b)
-    return ReflectMatrix
+        for idx in range(channels):
+            ReflectMatrix[:, idx, :] = (HSI[:, idx, :] * k[idx] + b[idx]) * self.cur_proportion ### errors remian here
+        
+        #print(ReflectMatrix.shape)
+        print("ReflectMatrix is obtained.")
+        return ReflectMatrix
 
 
+    # interpolation algorithm to come up with the rest of k,b
+    def interpolate_list(self, input_list, output_length):
+        # x-axis raw_Data
+        x = np.linspace(0, 1, len(input_list))
+        # use the interpolation function
+        f = interp1d(x, input_list, kind='linear')
+        # make the output x
+        output_x = np.linspace(0, 1, output_length)
+        # interpolate
+        output_list = f(output_x)
+        
+        return output_list.tolist()
 
-if __name__ == "__main__":
-    # Level 0
-    HSI_info = ReadData.Read()
-    # Level 1
-    HSI_info_L1, BG_Counter, proportion_1 = RemoveBG.getLevel1(HSI_info)
-    # Level 2
-    HSI_info_L2, SD_Counter, proportion_2 = RemoveDB.getLevel2(HSI_info_L1, BG_Counter,proportion_1)
-    # Level 3
-    ReflectMatrix = getReflectMatrix(HSI_info_L2, proportion_2)
-    avg_reflect = getLeafAvgReflect(ReflectMatrix)
-    #print(avg_reflect)
+    def getRefBoard(self):
+        wavelengths = self.HSI_info[4]
 
-    # Write the reflectvector into a local csv file
-    wavelengths = HSI_info_L2[4]
-    FirstRow = wavelengths
-    ReflectRow = avg_reflect
-    with open("Results/ReflectCurve.csv","w",newline='') as f:
-        writer = csv.writer(f)
-        # Write the first row
-        writer.writerow(FirstRow)
-        # Write the remaining rows
-        writer.writerow(ReflectRow)
+        #"------------For the 3% Ref Board------------")
+        three_RefAmplititudes = self.getReferAmplititudes("3")
+        #"------------For the 30% Ref Board------------")
+        thirty_RefAmplititudes = self.getReferAmplititudes("30")
+        RefAmplititudes_file ="Results/test/RefAmplititudes.csv"
+        self.writeRef(RefAmplititudes_file, wavelengths, three_RefAmplititudes, thirty_RefAmplititudes)
 
-    # Plotting
-    x = np.array(HSI_info[4])
-    y = np.array(avg_reflect)
-    plt.plot(x,y,c='b',label='Curve_poly_Fit')
-    #plt.xticks(range(400, 1000, 100))
-    plt.savefig("Results/Reflectance_curve_new.jpg")
-    plt.show()
-    
+    def getLeafAvgReflect(self, ReflectMatrix):
+        AvgReflect = ReflectMatrix.mean(axis=(0,2))
+        return AvgReflect
+
+    def getReflectMatrix(self):
+        # Part 1. Get the reference Board Amplititudes
+        #positionRange2 = [[870,95],[880,105]] 
+
+        self.getRefBoard()
+
+        equation = self.getReflectEquation()
+        k = equation[0]
+        b = equation[1]
+
+        # Part 2. Map the RefBoard Amplititudes with the reflections
+        # Read the particular plot image
+        HSI_info_L2, proportion_2 = self.HSI_info, self.cur_proportion
+        #print(proportion_2)
+        # Level 3. Get the HSI reflectances
+        ReflectMatrix = self.getReflectance(k, b)
+        return ReflectMatrix
+

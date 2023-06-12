@@ -1,59 +1,75 @@
-import sys
-from PyQt5.QtCore import Qt, QRect
-from PyQt5.QtGui import QPixmap, QPainter, QColor
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QPushButton, QGraphicsRectItem
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QPainter, QColor
 
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super(MainWindow, self).__init__()
-        self.setWindowTitle("Image Selection")
-        
-        self.image_label = QLabel()
-        self.image_label.setAlignment(Qt.AlignCenter)
-
-        # 设置要加载的图像路径
-        image_path = "path_to_your_image.jpg"
-        self.image = QPixmap(image_path)
-
+class CustomGraphicsView(QGraphicsView):
+    def __init__(self, scene):
+        super().__init__(scene)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
         self.selection_rect = None
-        self.selection_start = None
-        self.selection_end = None
+        self.selecting = False
 
-        self.image_label.setPixmap(self.image)
-        self.setCentralWidget(self.image_label)
+    def startSelection(self):
+        self.selecting = True
+        self.selection_rect = QGraphicsRectItem()
+        self.selection_rect.setPen(Qt.blue)
+        self.scene().addItem(self.selection_rect)
+
+    def stopSelection(self):
+        if self.selection_rect is not None:
+            selected_items = self.scene().items(self.selection_rect.rect(), Qt.IntersectsItemShape)
+            # 执行框选后的操作，例如获取被选中的项
+
+            # 打印选择框的 x 和 y 坐标
+            rect = self.selection_rect.rect()
+            x = rect.x()
+            y = rect.y()
+            print("x:", x)
+            print("y:", y)
+
+            self.scene().removeItem(self.selection_rect)
+            self.selection_rect = None
+        self.selecting = False
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.selection_start = event.pos()
+        if event.button() == Qt.LeftButton and self.selecting:
+            pos_in_view = event.pos()
+            pos_in_scene = self.mapToScene(pos_in_view)
+            self.selection_rect.setRect(QRectF(pos_in_scene, pos_in_scene))
+            self.scene().addItem(self.selection_rect)
+
+    def mouseMoveEvent(self, event):
+        if self.selecting and self.selection_rect is not None:
+            pos_in_view = event.pos()
+            pos_in_scene = self.mapToScene(pos_in_view)
+            rect = QRectF(self.selection_rect.rect().topLeft(), pos_in_scene)
+            self.selection_rect.setRect(rect.normalized())
 
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.selection_end = event.pos()
-            self.selection_rect = QRect(self.selection_start, self.selection_end).normalized()
-            self.update()
-
-            # 获取选中区域的信息
-            if self.selection_rect.isValid():
-                selected_region = self.image.copy(self.selection_rect)
-                selected_region.save("selected_region.jpg")  # 保存选中的区域
-
-                # 打印选中区域的位置和大小
-                print("Selected region:")
-                print("X:", self.selection_rect.x())
-                print("Y:", self.selection_rect.y())
-                print("Width:", self.selection_rect.width())
-                print("Height:", self.selection_rect.height())
-
-    def paintEvent(self, event):
-        if self.selection_rect is not None:
-            painter = QPainter(self)
-            painter.setPen(QColor(255, 0, 0))
-            painter.drawRect(self.selection_rect)
+        if event.button() == Qt.LeftButton and self.selecting:
+            self.stopSelection()
 
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+class Main(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Main")
+        self.setGeometry(100, 100, 500, 500)
+
+        self.scene = QGraphicsScene()
+        self.view = CustomGraphicsView(self.scene)
+        self.setCentralWidget(self.view)
+
+        self.button = QPushButton("Start Selection", self)
+        self.button.setGeometry(10, 10, 120, 30)
+        self.button.clicked.connect(self.startSelection)
+
+    def startSelection(self):
+        self.view.startSelection()
+
+
+if __name__ == '__main__':
+    app = QApplication([])
+    main = Main()
+    main.show()
+    app.exec_()
