@@ -1,8 +1,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem, QPushButton, QGraphicsPathItem
+from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QPainterPath
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QPointF
 
 import sys
 import os
@@ -134,7 +134,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.showHsiInfoBtn.clicked.connect(self.showHsiInfo)
         
         # Draw the hyperspectra curve
-        self.HSCurveBtn.clicked.connect(self.HSCurve)
+        self.HSCurveBtn.clicked.connect(self.HSCurveView)
 
         # ------------------------------------Tab2------------------------------------
         # Part 2. Data Pre-processing
@@ -157,8 +157,12 @@ class Main(QMainWindow, Ui_MainWindow):
         self.RmBtSaveBtn.clicked.connect(lambda: self.RmDb("Save", "BT"))
 
         self.RefGeneBtn.clicked.connect(lambda: self.getReflect("Gene"))
-        self.RefViewBtn.clicked.connect(lambda: self.getiReflect("View"))
+        self.RefViewBtn.clicked.connect(lambda: self.getReflect("View"))
         self.RefSaveBtn.clicked.connect(lambda: self.getReflect("Save"))
+
+        # Draw the reflectance curve
+        self.RFCurveBtn.clicked.connect(self.RFCurveView)
+
 
 
     ######----------------------------------------------------------------------------------------------------######
@@ -225,6 +229,8 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.scene = QGraphicsScene()
                     self.scene.addItem(item)
                     self.hsiRawView.setScene(self.scene)
+                    # Make the graph self-adaptive to the canvas
+                    self.hsiRawView.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
 
             case "Save":
                 if self.rawSpeFile_path != "":
@@ -386,12 +392,13 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.reflect.visualizeReflect(1)
                 return
             
-    def HSCurve(self):
+    def HSCurveView(self):
+        self.view = HSCurve(self.scene)
+        self.view.show()
 
-        return
-
-
-
+    def RFCurveView(self):
+        self.view = RFCurve(self.scene)
+        self.view.show()
 
 
     # ----------------------------Tab3-----------------------------
@@ -430,6 +437,7 @@ class hsiRawView(QGraphicsView):
                 BRF3_x1 = int(BRF3_x0 + rect.width())
                 BRF3_y1 = int(BRF3_y0 + rect.height())
                 md.BRF3_pos_range = [[BRF3_x0,BRF3_y0],[BRF3_x1, BRF3_y1]]
+                #print(md.BRF3_pos_range)
                 
             
             elif self.BRF_flag == "30":
@@ -438,6 +446,7 @@ class hsiRawView(QGraphicsView):
                 BRF30_x1 = int(BRF30_x0 + rect.width())
                 BRF30_y1 = int(BRF30_y0 + rect.height())
                 md.BRF30_pos_range = [[BRF30_x0,BRF30_y0],[BRF30_x1, BRF30_y1]]
+                #print(md.BRF30_pos_range)
                 
             #self.scene().removeItem(self.selection_rect)
             self.selection_rect = None
@@ -461,6 +470,114 @@ class hsiRawView(QGraphicsView):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton and self.selecting:
             self.stopSelection()
+
+class HSCurve(QGraphicsView):
+    def __init__(self, scene):
+        super().__init__(scene)
+        self.setMouseTracking(True)  # Turn on the mouse track
+        self.cursor_pos = QPointF(0, 0) 
+
+        self.crosshair_item = QGraphicsPathItem()
+        self.crosshair_item.setPen(QPen(Qt.blue))
+        self.scene().addItem(self.crosshair_item)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.updateCrosshair()
+
+    def mouseMoveEvent(self, event):
+        self.cursor_pos = self.mapToScene(event.pos())
+        #print(self.cursor_pos)
+        self.updateCrosshair()
+
+    def updateCrosshair(self):
+        #view_width = self.viewport().width()
+        #view_height = self.viewport().height()
+        view_width = md.HSI_width
+        view_height = md.HSI_length
+        x = 0
+        y = 0
+
+        path = QPainterPath()
+       
+        if self.cursor_pos.x()>=0 and self.cursor_pos.x()<=view_width and self.cursor_pos.y()>=0 and self.cursor_pos.y()<=view_height:
+            # Paint the cross cursor
+            path.moveTo(self.cursor_pos.x(), 0)
+            path.lineTo(self.cursor_pos.x(), view_height)
+            path.moveTo(0, self.cursor_pos.y())
+            path.lineTo(view_width, self.cursor_pos.y())
+            
+            self.crosshair_item.setPath(path)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            x =  np.array(md.wavelength)
+            y = np.array(md.HSI[int(self.cursor_pos.y()),:,int(self.cursor_pos.x())])
+
+            plt.xlabel("Wavelength(nm)")
+            plt.ylabel("Hyperspectral Luminance")
+            plt.plot(x, y, c='g', label='Curve_poly_Fit')
+            plt.title("The Reflectance curve")
+
+            plt.show()
+    
+    # delete the cross path after close the event
+    def closeEvent(self, event):
+        self.crosshair_item.setPath(QPainterPath())
+
+class RFCurve(QGraphicsView):
+    def __init__(self, scene):
+        super().__init__(scene)
+        self.setMouseTracking(True)  # Turn on the mouse track
+        self.cursor_pos = QPointF(0, 0) 
+
+        self.crosshair_item = QGraphicsPathItem()
+        self.crosshair_item.setPen(QPen(Qt.blue))
+        self.scene().addItem(self.crosshair_item)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.updateCrosshair()
+
+    def mouseMoveEvent(self, event):
+        self.cursor_pos = self.mapToScene(event.pos())
+        #print(self.cursor_pos)
+        self.updateCrosshair()
+
+    def updateCrosshair(self):
+        #view_width = self.viewport().width()
+        #view_height = self.viewport().height()
+        view_width = md.HSI_width
+        view_height = md.HSI_length
+        x = 0
+        y = 0
+
+        path = QPainterPath()
+       
+        if self.cursor_pos.x()>=0 and self.cursor_pos.x()<=view_width and self.cursor_pos.y()>=0 and self.cursor_pos.y()<=view_height:
+            # Paint the cross cursor
+            path.moveTo(self.cursor_pos.x(), 0)
+            path.lineTo(self.cursor_pos.x(), view_height)
+            path.moveTo(0, self.cursor_pos.y())
+            path.lineTo(view_width, self.cursor_pos.y())
+            
+            self.crosshair_item.setPath(path)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            x =  np.array(md.wavelength)
+            y = np.array(md.reflect.ReflectMatrix[int(self.cursor_pos.y()),:,int(self.cursor_pos.x())])
+            plt.xlabel("Wavelength(nm)")
+            plt.ylabel("Reflectance")
+    
+            plt.plot(x,y,c='lightcoral',label='Curve_poly_Fit')
+            plt.title("The Reflectance curve of the cross cursor point")
+
+            plt.show()
+    
+    # delete the cross path after close the event
+    def closeEvent(self, event):
+        self.crosshair_item.setPath(QPainterPath())
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
