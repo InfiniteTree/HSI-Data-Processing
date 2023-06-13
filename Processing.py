@@ -136,7 +136,7 @@ def exportPhenotypeParas_eachPixel(HSI_info,reflectanceMatrix):
     channels= HSI_info[1]
     samples = HSI_info[2]
 
-    FirstRow = ["Loc","NDVI", "OSAVI", "PSSRb", "PSSRb", "RPI", "MTVI2"]
+    FirstRow = ["Loc","NDVI", "OSAVI", "PSSRa", "PSSRb", "RPI", "MTVI2"]
 
     avg_flag = 0
     PhenotypeParas= []

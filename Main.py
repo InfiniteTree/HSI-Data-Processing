@@ -1,7 +1,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor
+from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal
 
 import sys
@@ -74,8 +74,12 @@ class Main(QMainWindow, Ui_MainWindow):
 
     # The proportion is initially set as 1
     cur_proportion = 1
-    
 
+    # class reflect
+    reflect = None 
+    k = []
+    b = []
+    
     ###-------------------------------------------The End line---------------------------------------------------###
 
 
@@ -90,22 +94,26 @@ class Main(QMainWindow, Ui_MainWindow):
         self.previousPage = None
 
         # ------------------------------------Tab1------------------------------------
-        # Part 1. Show the raw data
+        # Part 1. Raw Data Processing
+        # Import the BRF HSI files
+        self.impBRFImgBtn.clicked.connect(self.importBRFImg)
+        
+        # Mouse box selection for 3% board
+        self.selectBox3Btn.clicked.connect(lambda: self.selectBox("3"))
+        # Mouse box selection for 30% board
+        self.selectBox30Btn.clicked.connect(lambda: self.selectBox("30"))
+
+        # Get k and b of the reflectance equation
+        self.importRftCaliFileBtn.clicked.connect(self.importRftCaliFile)
+        self.RefCaliBtn.clicked.connect(self.RefCali)
+        
+        
         # Import the single raw HSI file
         self.impRawBtn.clicked.connect(self.importRaw)
         self.impRawBtn.setGeometry(50, 50, 200, 30)
 
         # Import the multiples raw HSI files
         self.impRawsBtn.clicked.connect(self.importRaws)
-
-        # Import the BRF HSI files
-        self.impBRFImgBtn.clicked.connect(self.importBRFImg)
-        
-        # Mouse box selection for 3% board
-        self.selectBox3Btn.clicked.connect(lambda: self.selectBox("3"))
-
-        # Mouse box selection for 30% board
-        self.selectBox30Btn.clicked.connect(lambda: self.selectBox("30"))
 
 
         # Read the raw file
@@ -122,7 +130,11 @@ class Main(QMainWindow, Ui_MainWindow):
         # Save the raw BRF file
         self.BRFRawSaveBtn.clicked.connect(lambda:self.getBRFRgb("Save"))
 
+        # Show the hsi information
         self.showHsiInfoBtn.clicked.connect(self.showHsiInfo)
+        
+        # Draw the hyperspectra curve
+        self.HSCurveBtn.clicked.connect(self.HSCurve)
 
         # ------------------------------------Tab2------------------------------------
         # Part 2. Data Pre-processing
@@ -144,16 +156,15 @@ class Main(QMainWindow, Ui_MainWindow):
         self.RmBtViewBtn.clicked.connect(lambda: self.RmDb("View", "BT"))
         self.RmBtSaveBtn.clicked.connect(lambda: self.RmDb("Save", "BT"))
 
-        # Get the reflectance
-        self.importRftCaliFileBtn.clicked.connect(self.importRftCaliFile)
         self.RefGeneBtn.clicked.connect(lambda: self.getReflect("Gene"))
-        self.RefViewBtn.clicked.connect(lambda: self.getReflect("View"))
+        self.RefViewBtn.clicked.connect(lambda: self.getiReflect("View"))
         self.RefSaveBtn.clicked.connect(lambda: self.getReflect("Save"))
+
 
     ######----------------------------------------------------------------------------------------------------######
     #####-------------------------------------Helper Function start here---------------------------------------#####
     ####--------------------------------------------------------------------------------------------------------####
-    # ------------------------------------Tab1------------------------------------
+    # -------------------------------------Tab1-------------------------------------
     def importRaw(self):
         file_dialog = QFileDialog()
         selected_file, _ = file_dialog.getOpenFileName(QMainWindow(), '选择文件', '', '.spe(*.spe*)')
@@ -181,8 +192,14 @@ class Main(QMainWindow, Ui_MainWindow):
             self.BRFPathlineEdit.setText(self.BRFSpeFile_path)
             
             self.BRFHdrFile_path = self.BRFSpeFile_path.replace(".spe",".hdr")
-            
-        
+
+    def RefCali(self):
+        self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, [], [])
+        # Get the k and b
+        self.k, self.b = self.reflect.getReflectEquation()
+        # Unlock the view and Save function
+        QtWidgets.QMessageBox.about(self, "", "反射板校准已就绪")
+
 
     def getRgb(self, function):
         match function:
@@ -354,42 +371,24 @@ class Main(QMainWindow, Ui_MainWindow):
     def getReflect(self, function):
         match function:        
             case "Gene":
-                reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths)
-                ReflectMatrix = reflect.getReflectMatrix()
-                avg_reflect = reflect.getLeafAvgReflect(ReflectMatrix)
-                #print(avg_reflect)
-
-                # Write the reflectvector into a local csv file
-                wavelengths = self.HSI_info[4]
-                FirstRow = wavelengths
-                ReflectRow = avg_reflect
-                with open("Results/test/ReflectCurve.csv","w",newline='') as f:
-                    writer = csv.writer(f)
-                    # Write the first row
-                    writer.writerow(FirstRow)
-                    # Write the remaining rows
-                    writer.writerow(ReflectRow)
-
-                # Plotting
-                x = np.array(self.HSI_info[4])
-                y = np.array(avg_reflect)
-                plt.plot(x,y,c='b',label='Curve_poly_Fit')
-                #plt.xticks(range(400, 1000, 100))
-                plt.title("The Reflectance curve")
-                plt.savefig("Results/test/Reflectance_curve_new.jpg")
-                plt.show()
-
-
+                self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b)
+                self.reflect.getReflect()
                 # Unlock the view and Save function
                 self.RefViewBtn.setEnabled(True)
                 self.RefSaveBtn.setEnabled(True)
                 QtWidgets.QMessageBox.about(self, "", "反射率校准处理成功")
 
             case "View":
+                self.reflect.visualizeReflect(0)
                 return
 
             case "Save":
+                self.reflect.visualizeReflect(1)
                 return
+            
+    def HSCurve(self):
+
+        return
 
 
 
@@ -462,7 +461,6 @@ class hsiRawView(QGraphicsView):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton and self.selecting:
             self.stopSelection()
-
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
