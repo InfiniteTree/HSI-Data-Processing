@@ -28,7 +28,10 @@ def ReadData(hdrfileName,spefileName, flag):
             if (flag==0):
                 lines = int(195840000/300/480)
             if (flag==1):
-                lines = int(re.findall("\d{4}",data[row][2])[0])
+                try:
+                    lines = int(re.findall("\d{4}",data[row][2])[0])
+                except:
+                    lines = int(re.findall("\d{3}",data[row][2])[0])
             continue
         if data[row][0] == 'samples':
             #print(data[row])
@@ -71,9 +74,6 @@ def ReadData(hdrfileName,spefileName, flag):
     #imgs = np.fromfile('M:/m-CTP_DATA/2023.1.9/TeeSapling/2022-07-27-06-21.spe', dtype=np.int16).reshape(lines,channels,samples)
     imgs = imgs.astype(np.int16) # change the value range from (0, 4095) to (0, 255)
 
-    #print("wavelength is")
-    #print(wavelengths)
-    #print(imgs.shape)
     return lines, channels, samples, imgs, wavelengths
 
 def drawImg(HSI_info):
