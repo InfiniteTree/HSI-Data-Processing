@@ -42,8 +42,8 @@ def ReadData(hdrfileName,spefileName, flag):
             channels = int(re.findall("\d{3}",data[row][2])[0])
             continue
         if data[row][0] == "wavelength" and data[row][1] != "units":
-            #print(data[row])
             '''
+            # Version for the previous CCD
             str = data[row][2]
             str = str.replace("{","")
             str = str.replace("\n","")
@@ -62,11 +62,6 @@ def ReadData(hdrfileName,spefileName, flag):
     raw = ""
     wavelengths = raw.join(wavelengths)
     wavelengths = wavelengths.split(",")
-    #print(wavelengths)
-
-    print("The height of imgs is",lines)
-    print("The width of imgs is",samples)
-    print("The length of bands",channels)
 
     ### Read .spe file
     # Load file and reshape
@@ -86,27 +81,3 @@ def drawImg(HSI_info):
         for j in range (samples):
             newimg.putpixel((j,i),((int(HSI[i][105][j]*256/4095)),(int(HSI[i][59][j]*256/4096)),(int(HSI[i][34][j]*256/4096))))
     return(newimg)
-
-# Plotting
-if __name__ == "__main__":
-    '''
-    HSI_info = Read()
-    wavelengths = HSI_info[4]
-    HSI_img = HSI_info[3]
-    #print(imgs)
-    print("------------Begin to write each row-------")
-    height, bands, width = HSI_img.shape
-    spectral_data_2d = np.reshape(HSI_img, (height * width, bands))
-    bands_info = np.reshape(wavelengths, (1, bands))
-    spectral_data_2d_with_bands = np.concatenate((bands_info, spectral_data_2d))
-    csv_file_path = 'spectral_data.csv'
-    np.savetxt(csv_file_path, spectral_data_2d_with_bands, delimiter=',')
-    print("------------Finish writing each row-------")
-    '''
-    HSI_info = ReadData("C:/Users/AlexChen/Desktop/testGlant/20200527100522.hdr","C:/Users/AlexChen/Desktop/testGlant/20200527100522.hdr",1)
-    drawImg(HSI_info, "test")
-    
-
-    
-    
-

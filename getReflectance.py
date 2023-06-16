@@ -4,21 +4,26 @@ import csv
 from scipy.interpolate import interp1d
 
 import ReadData
-import RemoveBG
-import RemoveDB
+import Preprocess
 
 class Reflectance:
     HSI_info = []
     cur_proportion = 1
     BRF_positionRange = []  # position range of the refer board
     BRF_files = "" # path location fo the 3% and 30% Refer board Cali files
-
-    def __init__(self, HSI_info, cur_proportion, BRF_positionRange, brf_files):
+    avg_reflect = [] # 1-D average reflectance for the whole plot in different bands
+    ReflectMatrix = [] # 3-D reflectance matrix for the whole plot
+    k = [] # i.e. 300 k for 300 bands
+    b = [] # i.e. 300 b for 300 bands
+    
+    def __init__(self, HSI_info, cur_proportion, BRF_positionRange, brf_files, k, b):
         self.HSI_info = HSI_info
         #print(self.HSI_info)
         self.cur_proportion = cur_proportion
         self.BRF_positionRange = BRF_positionRange
         self.BRF_files = brf_files
+        self.k = k
+        self.b = b
         #print(self.BRF_positionRange)
 
 
@@ -60,7 +65,7 @@ class Reflectance:
         return waves,reflect
 
     def mapRef(self, inputfile, outputfile, lineNum):
-        X, Y = [], []
+        X_map, Y_map, orig_X = [], [], []
 
         Read_info = self.readRef(outputfile)
         waves = Read_info[0] 
@@ -72,80 +77,104 @@ class Reflectance:
 
         #print (contents[0])
         #print("------\n",contents[1])
-            channels = 300
-            num = 60
+            channels = self.HSI_info[1]
+            num = len(waves)
+            #print(num)
             #print("RefWaves is",RefWaves)
             #print("waves is", waves)
+            min_diff = float('inf')
+            min_index = None
+            '''
+            for k in range(num):
+                for i in range(channels):
+                    diff = abs(RefWaves[i] - waves[k])
+                    if diff < min_diff:
+                        min_diff = diff
+                        min_index = i
+                if min_index is not None:
+                    X_map.append(RefReflect[min_index])
+                Y_map.append(Read_info[1][k]/100)
+
+            
+            '''
             for i in range(channels):
                 for k in range(num):
                     if abs(RefWaves[i] - waves[k]) < 1:
-                        X.append(RefReflect[i])
+                        X_map.append(RefReflect[i])
                         #print(Read_info[1])
-                        Y.append(Read_info[1][k]/100)
-                    
-        return X, Y
+                        Y_map.append(Read_info[1][k]/100)
+            orig_X = RefReflect
+
+        return X_map, Y_map, orig_X
 
     def getReflectEquation(self):
+        self.getRefBoard()
+
         channels = self.HSI_info[1]
-        RefAmplititudes_file ="Results/test/RefAmplititudes.csv"
+        RefAmplititudes_file ="results/test/RefAmplititudes.csv"
         #print("------------3Ref----------")
-        refSample1= self.mapRef(RefAmplititudes_file, self.BRF_files[0], 1)
-        X1 = refSample1[0]
-        Y1 = refSample1[1]
+        refSample1= self.mapRef(RefAmplititudes_file, self.BRF_files[0], 2) # 30Ref 
+
+        X1 = refSample1[2]
+        X1_map = refSample1[0]
+        Y1_map = refSample1[1]
+
+    
+        refSample2 = self.mapRef(RefAmplititudes_file, self.BRF_files[1], 1)
+
+        X2 = refSample2[2]
+        X2_map = refSample2[0]
+        Y2_map = refSample2[1]
+        
+        #Y1 = np.interp(X1, X1_map, Y1_map)
+        #Y2 = np.interp(X2, X2_map, Y2_map)
+
+        # get the vector of k and b
         '''
+        Y1 = self.interpolate_list(X1_map, Y1_map, X1)
+        Y2 = self.interpolate_list(X2_map, Y2_map, X2)
         print("-----------------X1-------------------")
         print(X1)
         print("-----------------Y1-------------------")
         print(Y1)
-        '''
-        #print("------------30Ref----------")
-
-        refSample2 = self.mapRef(RefAmplititudes_file, self.BRF_files[1], 2)
-
-        X2 = refSample2[0]
-        Y2 = refSample2[1] 
-        '''
         print("-----------------X2-------------------")
         print(X2)
         print("-----------------Y2-------------------")
         print(Y2)
         '''
-
-        # get the vector of k and b
-        num = len(X2)
-        k, b = [], []
-
-        for i in range(num):
-            k.append((Y2[i] - Y1[i]) / (X2[i] - X1[i]))
-            b.append(Y1[i] - k[i]*X1[i])
-        '''
-        print("-----------------k-------------------")
-        print(k)
-        print("-----------------b-------------------")
-        print(b)
-        '''
+        for i in range(len(X1_map)):
+            self.k.append((Y2_map[i] - Y1_map[i]) / (X2_map[i] - X1_map[i]))
+            self.b.append(Y2_map[i] - self.k[i]*X2_map[i])
+        #print(len(self.k))
+        # By Here the k and b is absolutely correct!!!
         
-        # Now length of k, b is 57
+        # Now length of k, b is 60
         # we need 300 k,b
         # For the rest of k,b we can use interpolation algorithm to get the rest of them
-        k = self.interpolate_list(k, channels)
-        b = self.interpolate_list(b, channels)
+        self.k = self.interpolate_list(self.k, channels)
+        self.b = self.interpolate_list(self.b, channels)
+        '''
+        print("-----------------k-------------------")
+        print(self.k)
+        print("-----------------b-------------------")
+        print(self.b)
+        '''
+        
         # Need to be checked here!!!
-        return k,b
+        return self.k, self.b
 
 
-    def getReflectance(self, k, b):
+    def getReflectance(self):
         HSI = self.HSI_info[3]
         lines =  self.HSI_info[0]
         channels = self.HSI_info[1]
         samples = self.HSI_info[2]
-        wavelengths = self.HSI_info[4]
 
         ReflectMatrix = np.zeros((lines, channels, samples))
         #print(ReflectMatrix.shape)
 
         for idx in range(channels):
-            ReflectMatrix[:, idx, :] = (HSI[:, idx, :] * k[idx] + b[idx]) * self.cur_proportion ### errors remian here
+            ReflectMatrix[:, idx, :] = HSI[:, idx, :] * self.k[idx] + self.b[idx] 
         
         #print(ReflectMatrix.shape)
         print("ReflectMatrix is obtained.")
@@ -155,45 +184,53 @@ class Reflectance:
     # interpolation algorithm to come up with the rest of k,b
     def interpolate_list(self, input_list, output_length):
         # x-axis raw_Data
-        x = np.linspace(0, 1, len(input_list))
+        x = np.linspace(400, 990, len(input_list))
         # use the interpolation function
-        f = interp1d(x, input_list, kind='linear')
+        f = interp1d(x, input_list, kind='linear',fill_value='extrapolate')
         # make the output x
-        output_x = np.linspace(0, 1, output_length)
+        output_x = np.linspace(394, 1034, output_length)
         # interpolate
         output_list = f(output_x)
-        
-        return output_list.tolist()
+        return output_list
 
     def getRefBoard(self):
         wavelengths = self.HSI_info[4]
-
         #"------------For the 3% Ref Board------------")
         three_RefAmplititudes = self.getReferAmplititudes("3")
         #"------------For the 30% Ref Board------------")
         thirty_RefAmplititudes = self.getReferAmplititudes("30")
-        RefAmplititudes_file ="Results/test/RefAmplititudes.csv"
+        RefAmplititudes_file ="results/test/RefAmplititudes.csv"
         self.writeRef(RefAmplititudes_file, wavelengths, three_RefAmplititudes, thirty_RefAmplititudes)
 
-    def getLeafAvgReflect(self, ReflectMatrix):
-        AvgReflect = ReflectMatrix.mean(axis=(0,2))
-        return AvgReflect
+    def getLeafAvgReflect(self):
+        print("proportion is",self.cur_proportion)
+        self.AVG_reflect = self.ReflectMatrix.mean(axis=(0,2)) / self.cur_proportion ### errors remian here
 
-    def getReflectMatrix(self):
-        # Part 1. Get the reference Board Amplititudes
-        #positionRange2 = [[870,95],[880,105]] 
 
-        self.getRefBoard()
+    def getReflect(self):
+        self.ReflectMatrix = self.getReflectance()
+        self.getLeafAvgReflect()
+        wavelengths = self.HSI_info[4]
+        FirstRow = wavelengths
+        ReflectRow = self.avg_reflect
+        with open("results/test/ReflectCurve.csv","w",newline='') as f:
+            writer = csv.writer(f)
+            # Write the first row
+            writer.writerow(FirstRow)
+            # Write the remaining rows
+            writer.writerow(ReflectRow)
 
-        equation = self.getReflectEquation()
-        k = equation[0]
-        b = equation[1]
-
-        # Part 2. Map the RefBoard Amplititudes with the reflections
-        # Read the particular plot image
-        HSI_info_L2, proportion_2 = self.HSI_info, self.cur_proportion
-        #print(proportion_2)
-        # Level 3. Get the HSI reflectances
-        ReflectMatrix = self.getReflectance(k, b)
-        return ReflectMatrix
+    def visualizeReflect(self, saveFlag):
+        # Write the reflectvector into a local csv file
+        # Plotting
+        x = np.array(self.HSI_info[4])
+        y = np.array(self.AVG_reflect)
+        plt.xticks(range(400, 1000, 100))
+        plt.plot(x,y,c='b',label='Curve_poly_Fit')
+        #plt.xticks(range(400, 1000, 100))
+        plt.title("The Reflectance curve of the whole plot")
+        if saveFlag ==1:
+            plt.savefig("results/test/Reflectance_curve_new.jpg")
+        elif saveFlag ==0:
+            plt.show()
 

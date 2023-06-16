@@ -24,8 +24,11 @@ class process:
     lines = 0
     channels = 0
     samples = 0
+    waveStart = 0
 
-    map_band = {"band430": 21, "band531":68, "band550":77, "band570":87, "band635":117, "band670":134, "band680":138, "band705":150, "band750":171,"band780":185, "band800":195}
+    ### Need to remap the band intelligently
+    # (wavelenght - 400) / ((waveEnd - waveStart) / channels) 
+    map_band = {"band430":16, "band531":62, "band550":70, "band570":80, "band635":110, "band670":126, "band680":131, "band705":143, "band750":164,"band780":178, "band800":188}
     
     def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType):
         self.Reflect_Info = reflectInfo
@@ -38,35 +41,40 @@ class process:
         self.channels = self.Reflect_Info[1]
         self.samples = self.Reflect_Info[2]
         self.cur_proportion = self.Reflect_Info[5]
+        self.waveStart = int(self.Reflect_Info[4][0])
     
     def calImgSpecMean(self):
         return self.ReflectMatrix.mean(axis=(0,2)) / self.cur_proportion
 
     # Calculate the relative values the photosynthesis by the design formulas
     def calcHsParas(self):
+        self.ReflectMatrix = np.where(self.ReflectMatrix < 0, 0, self.ReflectMatrix)
+        #self.ReflectMatrix = np.where(self.ReflectMatrix > 1, 1, self.ReflectMatrix)
+
         match self.hsPara:
             case "NDVI":
-                NDVI = (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band680"],:]) / (self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band680"],:])
-                self.ParaMatrix = NDVI
+                self.ParaMatrix = (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band680"],:]) / (self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band680"],:])
             case "OSAVI":
-                OSAVI = (1+0.16) * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band670"],:]) / (self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band670"],:]+ 0.16)
-                self.ParaMatrix = OSAVI
+                self.ParaMatrix = (1+0.16) * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band670"],:]) / (self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band670"],:]+ 0.16)
             case "PSSRa":
-                PSSRa = self.ReflectMatrix[:,self.map_band["band800"],:] / self.ReflectMatrix[:,self.map_band["band680"],:]
-                self.ParaMatrix = PSSRa
+                self.ParaMatrix = self.ReflectMatrix[:,self.map_band["band800"],:] / self.ReflectMatrix[:,self.map_band["band680"],:]
             case "PSSRb":
-                PSSRb = self.ReflectMatrix[:,self.map_band["band800"],:] / self.ReflectMatrix[:,self.map_band["band635"],:]
-                self.ParaMatrix = PSSRb
+                self.ParaMatrix = self.ReflectMatrix[:,self.map_band["band800"],:] / self.ReflectMatrix[:,self.map_band["band635"],:]
             case "PRI":
-                PRI = (self.ReflectMatrix[:,self.map_band["band570"],:] - self.ReflectMatrix[:,self.map_band["band531"],:]) / (self.ReflectMatrix[:,self.map_band["band570"],:] + self.ReflectMatrix[:,self.map_band["band531"],:])
-                self.ParaMatrix = PRI
+                self.ParaMatrix = (self.ReflectMatrix[:,self.map_band["band570"],:] - self.ReflectMatrix[:,self.map_band["band531"],:]) / (self.ReflectMatrix[:,self.map_band["band570"],:] + self.ReflectMatrix[:,self.map_band["band531"],:])
             case "MTVI2":
-                MTVI2 = 1.5 * (1.2 * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]) - 2.5 * (self.ReflectMatrix[:,self.map_band["band670"],:] - self.ReflectMatrix[:,self.map_band["band550"],:])) / math.sqrt(((2 * self.ReflectMatrix[:,self.map_band["band800"],:]+1)*2 - (6*self.ReflectMatrix[:,self.map_band["band800"],:]-5*math.sqrt(self.ReflectMatrix[:,self.map_band["band670"],:]))-0.5))
-                self.ParaMatrix = MTVI2
+                self.ParaMatrix = 1.5 * (1.2 * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]) - 2.5 * (self.ReflectMatrix[:,self.map_band["band670"],:] - self.ReflectMatrix[:,self.map_band["band550"],:])) / math.sqrt(((2 * self.ReflectMatrix[:,self.map_band["band800"],:]+1)*2 - (6*self.ReflectMatrix[:,self.map_band["band800"],:]-5*math.sqrt(self.ReflectMatrix[:,self.map_band["band670"],:]))-0.5))
+        if np.any(self.ParaMatrix > 10):
+            print("Yes")
+        self.ParaMatrix[self.ParaMatrix < -1] = -1
+        self.ParaMatrix[self.ParaMatrix > 1] = 1
 
-    def draw_pseudoColorImg(self):
+        #print(self.ParaMatrix)
+
+    def draw_pseudoColorImg(self, flag):
         #print(self.ParaMatrix)
         fig, ax = plt.subplots(figsize=(6, 8))
+        #print(self.hsPara)
         match self.hsPara:
             case "NDVI":
                 im = ax.imshow(self.ParaMatrix, cmap='hot',interpolation='nearest')
@@ -88,7 +96,10 @@ class process:
                 ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
 
         cbar = fig.colorbar(im)
-        plt.savefig("figures/test/process/" + self.hsPara + ".jpg")
+        if flag == "Save":
+            plt.savefig("figures/test/process/" + self.hsPara + ".jpg")
+        if flag == "View": # Consider to just load the figure here!!!!!!!!!
+            plt.show()
 
     # Machine learning prediction
     def CalcPhenotypeParas(self):

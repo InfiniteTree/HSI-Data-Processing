@@ -1,6 +1,6 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem, QPushButton, QGraphicsPathItem
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QVBoxLayout, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem, QGraphicsPathItem, QLabel
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QPainterPath
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QPointF
 
@@ -145,6 +145,9 @@ class Main(QMainWindow, Ui_MainWindow):
 
         # ------------------------------------Tab2------------------------------------
         # Part 2. Data Pre-processing
+        self.NDVI_TH = self.bgParaDb.currentText()
+        self.ampl_LowTH = self.amplLowThDb.currentText()
+        self.ampl_HighTH = self.amplHighThDb.currentText()
         # Handle Selection Changed
         self.bgParaDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(1))
         self.amplLowThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(2))
@@ -167,16 +170,22 @@ class Main(QMainWindow, Ui_MainWindow):
         self.RFCurveBtn.clicked.connect(self.RFCurveView)
 
         # ------------------------------------Tab3------------------------------------
-        # self.hsParaDb.currentText()
+        # Get the current text in the drab bar
+        self.HS_Para = self.hsParaDb.currentText()
+        self.Ptsths_Para = self.ptsthsParaDb.currentText()
+        self.Ptsths_Para_Model = self.ptsthsParaModelDb.currentText()
+        # Get the changed text in the drab bar
         self.hsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(1))
         self.ptsthsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(2))
         self.ptsthsParaModelDb.currentIndexChanged.connect(lambda: self.getProcessPara(3))
 
         self.hsParaGeneBtn.clicked.connect(lambda: self.getHsPara("Gene"))
         self.hsParaSaveBtn.clicked.connect(lambda: self.getHsPara("Save"))
+        self.hsParaViewBtn.clicked.connect(lambda: self.getHsPara("View"))
 
         self.ptsthsGeneBtn.clicked.connect(lambda: self.getPtsthsPara("Gene"))
         self.ptsthsSaveBtn.clicked.connect(lambda: self.getPtsthsPara("Save"))
+        self.ptsthsViewBtn.clicked.connect(lambda: self.getPtsthsPara("View"))
 
     ######----------------------------------------------------------------------------------------------------######
     #####-------------------------------------Helper Function start here---------------------------------------#####
@@ -230,6 +239,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 # Unlock the view and Save function
                 self.rgbViewBtn.setEnabled(True)
                 self.rgbSaveBtn.setEnabled(True)
+                self.showHsiInfoBtn.setEnabled(True)
                 QtWidgets.QMessageBox.about(self, "", "高光谱原始数据处理成功")
             
             case "Save":
@@ -251,6 +261,7 @@ class Main(QMainWindow, Ui_MainWindow):
                     # Make the graph self-adaptive to the canvas
                     self.hsiRawView.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
 
+                    self.HSCurveBtn.setEnabled(True)
 
 
     def getBRFRgb(self, function):
@@ -265,6 +276,9 @@ class Main(QMainWindow, Ui_MainWindow):
                 # Unlock the view and Save function
                 self.BRFRawViewBtn.setEnabled(True)
                 self.BRFRawSaveBtn.setEnabled(True)
+
+                self.showHsiInfoBtn.setEnabled(True)
+
                 QtWidgets.QMessageBox.about(self, "", "高光谱反射板处理成功")
 
             case "Save":
@@ -284,6 +298,11 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.scene.addItem(item)
                     self.hsiRawView.setScene(self.scene)
 
+                    # Unlock
+                    self.selectBox3Btn.setEnabled(True)
+                    self.selectBox30Btn.setEnabled(True)
+                    self.HSCurveBtn.setEnabled(True)
+
     def selectBox(self, brf_flag):
         self.view = hsiRawView(self.scene, brf_flag)
         #self.setCentralWidget(self.view)
@@ -296,7 +315,21 @@ class Main(QMainWindow, Ui_MainWindow):
         self.lenShowBtn.setText(str(self.HSI_lines)+" pix")
         self.widthShowBtn.setText(str(self.HSI_samples)+" pix")
         self.wlShowBtn.setText(str(self.HSI_channels)+" bands")
+        
+        self.wavesLayout = QVBoxLayout(self.wavesWidget)
+        
+        text = "图像具体波段"
+        label = QLabel(text)
+        label.setStyleSheet("border: none; font: 12pt 'Agency FB';") 
+        self.wavesLayout.addWidget(label)
 
+        for i in range(self.HSI_channels):
+            text = "band " + str(i+1) + "------" + self.HSI_wavelengths[i] + " nm"
+            label = QLabel(text)
+            label.setStyleSheet("border: none; font: 12pt 'Times New Roman';") 
+            self.wavesLayout.addWidget(label)
+        self.WaveScrollArea.setWidgetResizable(True)
+ 
     # ------------------------------------Tab2------------------------------------
     def getPreProcessPara(self, index):
         combo_box = self.sender()
@@ -433,6 +466,7 @@ class Main(QMainWindow, Ui_MainWindow):
         match index:
             case 1:
                 self.Hs_Para = combo_box.currentText()
+                print(self.Hs_Para)
             case 2:
                 self.Ptsths_Para = combo_box.currentText()
             case 3:
@@ -448,12 +482,14 @@ class Main(QMainWindow, Ui_MainWindow):
                 # Unlock the view and Save function
                 self.hsParaSaveBtn.setEnabled(True)
                 self.hsParaViewBtn.setEnabled(True)
-                
                 QtWidgets.QMessageBox.about(self, "", "光谱指数计算成功")
 
             case "Save":
-                self.pro_data.draw_pseudoColorImg()
+                self.pro_data.draw_pseudoColorImg("Save")
                 QtWidgets.QMessageBox.about(self, "", "光谱指数计算结果保存成功")
+
+            case "View":
+                self.pro_data.draw_pseudoColorImg("View")
 
     def getPtsthsPara(self, function):
         match function:
