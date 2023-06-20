@@ -7,9 +7,6 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import GridSearchCV
 #from sklearn.model_selection import train_test_split
 
-import ReadData
-import Preprocess
-import GetReflectance
 
 class process:
     Reflect_Info = []
@@ -27,7 +24,7 @@ class process:
     waveStart = 0
 
     ### Need to remap the band intelligently
-    # (wavelenght - 400) / ((waveEnd - waveStart) / channels) 
+    # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
     map_band = {"band430":16, "band531":62, "band550":70, "band570":80, "band635":110, "band670":126, "band680":131, "band705":143, "band750":164,"band780":178, "band800":188}
     
     def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType):
@@ -41,7 +38,7 @@ class process:
         self.channels = self.Reflect_Info[1]
         self.samples = self.Reflect_Info[2]
         self.cur_proportion = self.Reflect_Info[5]
-        self.waveStart = int(self.Reflect_Info[4][0])
+        self.waveStart = int(float(self.Reflect_Info[4][0]))
     
     def calImgSpecMean(self):
         return self.ReflectMatrix.mean(axis=(0,2)) / self.cur_proportion
@@ -64,6 +61,7 @@ class process:
                 self.ParaMatrix = (self.ReflectMatrix[:,self.map_band["band570"],:] - self.ReflectMatrix[:,self.map_band["band531"],:]) / (self.ReflectMatrix[:,self.map_band["band570"],:] + self.ReflectMatrix[:,self.map_band["band531"],:])
             case "MTVI2":
                 self.ParaMatrix = 1.5 * (1.2 * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]) - 2.5 * (self.ReflectMatrix[:,self.map_band["band670"],:] - self.ReflectMatrix[:,self.map_band["band550"],:])) / math.sqrt(((2 * self.ReflectMatrix[:,self.map_band["band800"],:]+1)*2 - (6*self.ReflectMatrix[:,self.map_band["band800"],:]-5*math.sqrt(self.ReflectMatrix[:,self.map_band["band670"],:]))-0.5))
+        
         if np.any(self.ParaMatrix > 10):
             print("Yes")
         self.ParaMatrix[self.ParaMatrix < -1] = -1

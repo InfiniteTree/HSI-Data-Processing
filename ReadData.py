@@ -3,6 +3,7 @@ from PIL import Image
 import re
 import csv
 
+# Test function
 def Read():
     HSI_info = ReadData("M:/m-CTP_DATA/2023.1.9/wheat/TASK2023-01-08-02-42/Hyperspectral/2023-01-08-06-01-59.hdr","M:/m-CTP_DATA/2023.1.9/wheat/TASK2023-01-08-02-42/Hyperspectral/2023-01-08-06-01-59.spe", 1)
     print("Successfully read the testPlant HSI")
@@ -13,6 +14,7 @@ def ReadRef():
     print("Successfully read the refBoard HSI")
     return HSI_info
 
+# Useful function
 def ReadData(hdrfileName,spefileName, flag):
     data = []
     ### Read .hdr file to store the infomation

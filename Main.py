@@ -145,9 +145,9 @@ class Main(QMainWindow, Ui_MainWindow):
 
         # ------------------------------------Tab2------------------------------------
         # Part 2. Data Pre-processing
-        self.NDVI_TH = self.bgParaDb.currentText()
-        self.ampl_LowTH = self.amplLowThDb.currentText()
-        self.ampl_HighTH = self.amplHighThDb.currentText()
+        self.NDVI_TH = float(self.bgParaDb.currentText())
+        self.ampl_LowTH = int(self.amplLowThDb.currentText())
+        self.ampl_HighTH = int(self.amplHighThDb.currentText())
         # Handle Selection Changed
         self.bgParaDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(1))
         self.amplLowThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(2))
@@ -506,7 +506,6 @@ class Main(QMainWindow, Ui_MainWindow):
 
     # ----------------------------Tab4-----------------------------
 
-
 class hsiRawView(QGraphicsView):
     def __init__(self, scene, brf_flag):
         super().__init__(scene)
@@ -613,7 +612,6 @@ class HSCurve(QGraphicsView):
         if event.button() == Qt.LeftButton:
             x =  np.array(md.HSI_wavelengths)
             y = np.array(md.HSI[int(self.cursor_pos.y()),:,int(self.cursor_pos.x())])
-
             plt.xlabel("Wavelength(nm)")
             plt.ylabel("Hyperspectral Luminance")
             plt.plot(x, y, c='g', label='Curve_poly_Fit')
@@ -624,6 +622,8 @@ class HSCurve(QGraphicsView):
     # delete the cross path after close the event
     def closeEvent(self, event):
         self.crosshair_item.setPath(QPainterPath())
+    
+
 
 class RFCurve(QGraphicsView):
     def __init__(self, scene):
@@ -665,8 +665,9 @@ class RFCurve(QGraphicsView):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            x =  np.array(md.HSI_wavelengths)
-            y = np.array(md.reflect.ReflectMatrix[int(self.cursor_pos.y()),:,int(self.cursor_pos.x())])
+            # Just show the HS with wavelength within 400nm - 990nm
+            x =  np.array(md.HSI_wavelengths[2:-22])
+            y = np.array(md.reflect.ReflectMatrix[int(self.cursor_pos.y()),2:-22,int(self.cursor_pos.x())])
             plt.xlabel("Wavelength(nm)")
             plt.ylabel("Reflectance")
     

@@ -53,7 +53,7 @@ class preprocess:
         denominator = HSI[:, self.band800, :] + HSI[:, self.band670, :]
         denominator[denominator == 0] = 1  # Avoid the denominator is zero, set it as 1 
         NDVI = numerator / denominator
-        NDVI[denominator == 0] = 0  # the denominator is zero, set it as 1
+        NDVI[denominator == 0] = 0  # the denominator is zero, set it as 0
         
         # Build Mask 
         level1_mask = NDVI < self.NDVI_TH
@@ -61,6 +61,7 @@ class preprocess:
         # Generate the HSI
         Transposed_HSI = np.transpose(HSI, (0, 2, 1)) # exChange the second and the third dimension
         Transposed_HSI[level1_mask,:] = 0
+        
         HSI = np.transpose(Transposed_HSI, (0, 2, 1))
 
         # Get the plants position
@@ -133,7 +134,6 @@ class preprocess:
             print("cur_proportion is", self.cur_proportion)
 
         return HSI, self.DB_Counter, np.array(HL_position), self.cur_proportion
-
 
     # Get the Level2 HSI by removing the shadows
     def getLevel2(self):
