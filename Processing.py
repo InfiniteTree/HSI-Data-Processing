@@ -25,7 +25,7 @@ class process:
 
     ### Need to remap the band intelligently
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
-    map_band = {"band430":16, "band531":62, "band550":70, "band570":80, "band635":110, "band670":126, "band680":131, "band705":143, "band750":164,"band780":178, "band800":188}
+    map_band = {"band430":16, "band445":22, "band500":47, "band510":51,"band531":62, "band550":70, "band570":80, "band635":110, "band670":126, "band680":131, "band700":139, "band705":143, "band750":164,"band780":178, "band800":188, "band900":235,"band970":268}
     
     def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType):
         self.Reflect_Info = reflectInfo
@@ -46,26 +46,156 @@ class process:
     # Calculate the relative values the photosynthesis by the design formulas
     def calcHsParas(self):
         self.ReflectMatrix = np.where(self.ReflectMatrix < 0, 0, self.ReflectMatrix)
-        #self.ReflectMatrix = np.where(self.ReflectMatrix > 1, 1, self.ReflectMatrix)
+        self.ReflectMatrix = np.where(self.ReflectMatrix > 1, 1, self.ReflectMatrix)
 
         match self.hsPara:
             case "NDVI":
-                self.ParaMatrix = (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band680"],:]) / (self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band680"],:])
+                numerator =  self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band680"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band680"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                # All range in [-1, 1], while plant in [0.2, 0.8]
+                self.ParaMatrix[self.ParaMatrix < 0] = 0
+                self.ParaMatrix[self.ParaMatrix > 1] = 0
+                
             case "OSAVI":
-                self.ParaMatrix = (1+0.16) * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band670"],:]) / (self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band670"],:]+ 0.16)
-            case "PSSRa":
-                self.ParaMatrix = self.ReflectMatrix[:,self.map_band["band800"],:] / self.ReflectMatrix[:,self.map_band["band680"],:]
-            case "PSSRb":
-                self.ParaMatrix = self.ReflectMatrix[:,self.map_band["band800"],:] / self.ReflectMatrix[:,self.map_band["band635"],:]
+                numerator =  (1+0.16) * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band670"],:])
+                denominator = self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band670"],:]+ 0.16
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                
             case "PRI":
-                self.ParaMatrix = (self.ReflectMatrix[:,self.map_band["band570"],:] - self.ReflectMatrix[:,self.map_band["band531"],:]) / (self.ReflectMatrix[:,self.map_band["band570"],:] + self.ReflectMatrix[:,self.map_band["band531"],:])
+                numerator =  self.ReflectMatrix[:,self.map_band["band531"],:] - self.ReflectMatrix[:,self.map_band["band570"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band531"],:] + self.ReflectMatrix[:,self.map_band["band570"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                # All range in [-1, 1], while plant in [-0.2, 0.2]
+                self.ParaMatrix[self.ParaMatrix < -0.2] = -0.2
+                self.ParaMatrix[self.ParaMatrix > 0.2] = -0.2
+
             case "MTVI2":
-                self.ParaMatrix = 1.5 * (1.2 * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]) - 2.5 * (self.ReflectMatrix[:,self.map_band["band670"],:] - self.ReflectMatrix[:,self.map_band["band550"],:])) / math.sqrt(((2 * self.ReflectMatrix[:,self.map_band["band800"],:]+1)*2 - (6*self.ReflectMatrix[:,self.map_band["band800"],:]-5*math.sqrt(self.ReflectMatrix[:,self.map_band["band670"],:]))-0.5))
+                numerator =  1.5 * (1.2 * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]) - 2.5 * (self.ReflectMatrix[:,self.map_band["band670"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]))
+                denominator = np.sqrt(((2 * self.ReflectMatrix[:,self.map_band["band800"],:]+1)*2 - (6*self.ReflectMatrix[:,self.map_band["band800"],:]-5*np.sqrt(self.ReflectMatrix[:,self.map_band["band670"],:]))-0.5))
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+            
+            case "SR":
+                numerator =  self.ReflectMatrix[:,self.map_band["band800"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band680"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[self.ParaMatrix < 2] = 2
+                self.ParaMatrix[self.ParaMatrix > 8] = 2
+            
+            case "DVI":
+                var_1 =  self.ReflectMatrix[:,self.map_band["band800"],:]
+                var_2 = self.ReflectMatrix[:,self.map_band["band680"],:]
+                self.ParaMatrix = var_1 - var_2
+                
+            case "SIPI":
+                numerator =  self.ReflectMatrix[:,self.map_band["band800"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band680"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[self.ParaMatrix < -0.1] = -0.1
+                self.ParaMatrix[self.ParaMatrix > 0.2] = -0.1
+
+            case "PSRI":
+                numerator =  self.ReflectMatrix[:,self.map_band["band680"],:] - self.ReflectMatrix[:,self.map_band["band500"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band750"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[self.ParaMatrix < -1] = 0
+                self.ParaMatrix[self.ParaMatrix > 1] = 0
+
+            case "CRI1":
+                denominator_1 = self.ReflectMatrix[:,self.map_band["band510"],:]
+                denominator_2 = self.ReflectMatrix[:,self.map_band["band550"],:]
+                denominator_1[denominator_1 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = 1/denominator_1 - 1/denominator_2
+                self.ParaMatrix[self.ParaMatrix < 0] = 0 
+                self.ParaMatrix[self.ParaMatrix > 15] = 0
+            
+            case "CRI2":
+                denominator_1 = self.ReflectMatrix[:,self.map_band["band510"],:]
+                denominator_2 = self.ReflectMatrix[:,self.map_band["band700"],:]
+                denominator_1[denominator_1 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = 1/denominator_1 - 1/denominator_2
+                self.ParaMatrix[self.ParaMatrix < 0] = 0 
+                self.ParaMatrix[self.ParaMatrix > 15] = 0
+
+
+            case "ARI1":
+                denominator_1 = self.ReflectMatrix[:,self.map_band["band550"],:]
+                denominator_2 = self.ReflectMatrix[:,self.map_band["band700"],:]
+                denominator_1[denominator_1 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = 1/denominator_1 - 1/denominator_2
+                self.ParaMatrix[self.ParaMatrix < 0] = 0 
+                self.ParaMatrix[self.ParaMatrix > 0.2] = 0
+
+            case "ARI2":
+                denominator_1 = self.ReflectMatrix[:,self.map_band["band550"],:]
+                denominator_2 = self.ReflectMatrix[:,self.map_band["band700"],:]
+                denominator_1[denominator_1 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = self.ReflectMatrix[:,self.map_band["band800"],:] * (1/denominator_1 - 1/denominator_2)
+                self.ParaMatrix[self.ParaMatrix < 0] = 0 
+                self.ParaMatrix[self.ParaMatrix > 0.2] = 0
+
+            case "WBI":
+                numerator =  self.ReflectMatrix[:,self.map_band["band900"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band970"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                # plant in [0.8, 1.2]
+                self.ParaMatrix[self.ParaMatrix <= 0.8] = 0.8
+                self.ParaMatrix[self.ParaMatrix >= 1.2] = 0.8
+
+            # Bugs remain in PSSRa and PSSRb, which is caused by the raw data of band680/band635 
+            # (reflectance is approximately zero and make the calculation result too large)
+            case "PSSRa":
+                numerator =  self.ReflectMatrix[:,self.map_band["band800"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band680"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[self.ParaMatrix < 2] = 2
+                self.ParaMatrix[self.ParaMatrix > 8] = 2
+            
+            case "PSSRb":
+                numerator =  self.ReflectMatrix[:,self.map_band["band800"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band635"],:]
+                denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                self.ParaMatrix = numerator / denominator
+                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[self.ParaMatrix < 2] = 2
+                self.ParaMatrix[self.ParaMatrix > 8] = 2
+
+
+
+            # Self defined formular
+            case "user-defined":
+                print("ok")
         
         if np.any(self.ParaMatrix > 10):
-            print("Yes")
-        self.ParaMatrix[self.ParaMatrix < -1] = -1
-        self.ParaMatrix[self.ParaMatrix > 1] = 1
+            print("Yes >10")
+        
+        if np.any(self.ParaMatrix < -10):
+            print("Yes <10")
+
+        #self.ParaMatrix[self.ParaMatrix < -1] = -1
+        #self.ParaMatrix[self.ParaMatrix > 1] = 1
 
         #print(self.ParaMatrix)
 
@@ -75,16 +205,16 @@ class process:
         #print(self.hsPara)
         match self.hsPara:
             case "NDVI":
-                im = ax.imshow(self.ParaMatrix, cmap='hot',interpolation='nearest')
+                im = ax.imshow(self.ParaMatrix, cmap='gray',interpolation='nearest')
                 ax.set_title("Pseudo_Color Map of the Relative Values on NDVI", y=1.05)
             case "OSAVI":
                 im = ax.imshow(self.ParaMatrix, cmap='viridis',interpolation='nearest')
                 ax.set_title("Pseudo_Color Map of the Relative Values on OSAVI", y=1.05)
             case "PSSRa":
-                im = ax.imshow(self.ParaMatrix, cmap='seismic',interpolation='nearest')
+                im = ax.imshow(self.ParaMatrix, cmap='spring',interpolation='nearest')
                 ax.set_title("Pseudo_Color Map of the Relative Values on PSSRa", y=1.05)
             case "PSSRb":
-                im = ax.imshow(self.ParaMatrix, cmap='coolwarm',interpolation='nearest')
+                im = ax.imshow(self.ParaMatrix, cmap='summer',interpolation='nearest')
                 ax.set_title("Pseudo_Color Map of the Relative Values on PSSRb", y=1.05)
             case "PRI":
                 im = ax.imshow(self.ParaMatrix, cmap='magma',interpolation='nearest')
@@ -93,8 +223,37 @@ class process:
                 im = ax.imshow(self.ParaMatrix, cmap='hot',interpolation='nearest')
                 ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
 
+            case "SR":
+                im = ax.imshow(self.ParaMatrix, cmap='gray',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on SR", y=1.05)
+            case "DVI":
+                im = ax.imshow(self.ParaMatrix, cmap='viridis',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on DVI", y=1.05)
+            case "SIPI":
+                im = ax.imshow(self.ParaMatrix, cmap='spring',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on SIPI", y=1.05)
+            case "PSRI":
+                im = ax.imshow(self.ParaMatrix, cmap='summer',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on PSRI", y=1.05)
+            case "CRI1":
+                im = ax.imshow(self.ParaMatrix, cmap='magma',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on CRI1", y=1.05)
+            case "CRI2":
+                im = ax.imshow(self.ParaMatrix, cmap='hot',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on CRI2", y=1.05)
+            case "ARI1":
+                im = ax.imshow(self.ParaMatrix, cmap='summer',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on ARI1", y=1.05)
+            case "ARI2":
+                im = ax.imshow(self.ParaMatrix, cmap='magma',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on ARI2", y=1.05)
+            case "WBI":
+                im = ax.imshow(self.ParaMatrix, cmap='hot',interpolation='nearest')
+                ax.set_title("Pseudo_Color Map of the Relative Values on WBI", y=1.05)
+
+
         cbar = fig.colorbar(im)
-        if flag == "Save":
+        if flag == "Save": 
             plt.savefig("figures/test/process/" + self.hsPara + ".jpg")
         if flag == "View": # Consider to just load the figure here!!!!!!!!!
             plt.show()

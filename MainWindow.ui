@@ -29,7 +29,7 @@ QTabBar::tab{height:30}
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <property name="iconSize">
        <size>
@@ -1099,7 +1099,7 @@ font: 12pt &quot;Agency FB&quot;;</string>
              <x>300</x>
              <y>40</y>
              <width>431</width>
-             <height>671</height>
+             <height>721</height>
             </rect>
            </property>
            <property name="autoFillBackground">
@@ -1184,7 +1184,69 @@ font: 12pt &quot;Agency FB&quot;;</string>
                      <string>MTVI2</string>
                     </property>
                    </item>
+                   <item>
+                    <property name="text">
+                     <string>DVI</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>SIPI</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>PSRI</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>CRI1</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>CRI2</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>ARI1</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>ARI2</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>WBI</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>user-defined</string>
+                    </property>
+                   </item>
                   </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <item>
+                  <widget class="QLabel" name="label_9">
+                   <property name="styleSheet">
+                    <string notr="true">Border:None;</string>
+                   </property>
+                   <property name="text">
+                    <string>输入公式：</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="HSFmlInput"/>
                  </item>
                 </layout>
                </item>

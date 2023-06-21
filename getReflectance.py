@@ -113,14 +113,23 @@ class Reflectance:
         channels = self.HSI_info[1]
         RefAmplititudes_file ="results/test/RefAmplititudes.csv"
         #print("------------3Ref----------")
-        refSample1= self.mapRef(RefAmplititudes_file, self.BRF_files[0], 2) # 30Ref 
+
+        if self.BRF_files[0][-6:] == "30.csv":
+            BRF_30 = self.BRF_files[0]
+            BRF_3 = self.BRF_files[1]
+        else:
+            BRF_30 = self.BRF_files[1]
+            BRF_3 = self.BRF_files[0]
+
+
+        refSample1= self.mapRef(RefAmplititudes_file, BRF_3, 1) # 30Ref 
 
         X1 = refSample1[2]
         X1_map = refSample1[0]
         Y1_map = refSample1[1]
 
     
-        refSample2 = self.mapRef(RefAmplititudes_file, self.BRF_files[1], 1)
+        refSample2 = self.mapRef(RefAmplititudes_file, BRF_30, 2)
 
         X2 = refSample2[2]
         X2_map = refSample2[0]

@@ -174,6 +174,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.HS_Para = self.hsParaDb.currentText()
         self.Ptsths_Para = self.ptsthsParaDb.currentText()
         self.Ptsths_Para_Model = self.ptsthsParaModelDb.currentText()
+
         # Get the changed text in the drab bar
         self.hsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(1))
         self.ptsthsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(2))
@@ -388,8 +389,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 plt.show()
                 '''
                 
-
-    
     # Remove the too bright and to dark img
     def RmDb(self, function):
             # To remove the shadow and the bright of the plot
@@ -494,14 +493,21 @@ class Main(QMainWindow, Ui_MainWindow):
     def getPtsthsPara(self, function):
         match function:
             case "Gene":
+                reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
+                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model)
+                self.pro_data.CalcPhenotypeParas()
                 # Unlock the view and Save function
                 self.ptsthsViewBtn.setEnabled(True)
                 self.ptsthsSaveBtn.setEnabled(True)
                 QtWidgets.QMessageBox.about(self, "", "光合表型参数计算成功")
 
-
             case "Save":
+                self.pro_data.draw_pseudoColorImg("Save")
                 QtWidgets.QMessageBox.about(self, "", "光合表型参数计算结果保存成功")
+
+            case "View":
+                self.pro_data.draw_pseudoColorImg("View")
+
 
 
     # ----------------------------Tab4-----------------------------
