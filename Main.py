@@ -35,7 +35,8 @@ class Main(QMainWindow, Ui_MainWindow):
 
 
     # Data recording for selection rectangular
-    scene = None
+    raw_scene = None
+    dealt_scene = None
     selecting = False
     selection_rect = None
     selection_start = None
@@ -63,9 +64,10 @@ class Main(QMainWindow, Ui_MainWindow):
     NDVI = []
 
     # Threshold value by set at the Tab2
-    NDVI_TH = 0 # Threshold value of NDVI to seperate the plant from the background
-    ampl_LowTH = 100  # Threshold value of amplititude of the hyperspectra to eliminate
-    ampl_HighTH = 4000  # Threshold value of amplititude of the hyperspectra to eliminate
+    NDVI_TH_LOW = -1 # Threshold value of NDVI to seperate the plant from the background
+    NDVI_TH_HIGH = 1 # Threshold value of NDVI to seperate the plant from the background
+    ampl_LowTH = 0  # Threshold value of amplititude of the hyperspectra to eliminate
+    ampl_HighTH = 4095  # Threshold value of amplititude of the hyperspectra to eliminate
 
     BRFfile_paths = [] # ["3%BRF_filename", "30%BRF_filename"]
 
@@ -81,6 +83,7 @@ class Main(QMainWindow, Ui_MainWindow):
     l2_rgbimg_path = "" # level 2 img rgb file path
 
     plant_mask = [] # bool value mask for the plant: True implies a non-plant pixel while False implies a plant pixel
+    plantPixNum = 0 # the number of the plant pixels
 
     # ------------------------------------Tab3------------------------------------
     Hs_Para = ""
@@ -147,13 +150,15 @@ class Main(QMainWindow, Ui_MainWindow):
 
         # ------------------------------------Tab2------------------------------------
         # Part 2. Data Pre-processing
-        self.NDVI_TH = float(self.bgParaDb.currentText())
+        self.NDVI_TH_HIGH = float(self.bgNdviHighDb.currentText())
+        self.NDVI_TH_LOW = float(self.bgNdviLowDb.currentText())
         self.ampl_LowTH = int(self.amplLowThDb.currentText())
         self.ampl_HighTH = int(self.amplHighThDb.currentText())
         # Handle Selection Changed
-        self.bgParaDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(1))
-        self.amplLowThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(2))
-        self.amplHighThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(3))
+        self.bgNdviHighDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(1))
+        self.bgNdviLowDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(2))
+        self.amplLowThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(3))
+        self.amplHighThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(4))
 
         # Level 1-2 pre-processing
         self.RmBgGeneBtn.clicked.connect(lambda: self.RmBg("Gene"))
@@ -174,7 +179,6 @@ class Main(QMainWindow, Ui_MainWindow):
         # ------------------------------------Tab3------------------------------------
         # Get the current text in the drab bar
         self.HS_Para = self.hsParaDb.currentText()
-        print("in the intialial step", self.HS_Para)
         self.Ptsths_Para = self.ptsthsParaDb.currentText()
         self.Ptsths_Para_Model = self.ptsthsParaModelDb.currentText()
 
@@ -182,8 +186,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.hsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(1))
         self.ptsthsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(2))
         self.ptsthsParaModelDb.currentIndexChanged.connect(lambda: self.getProcessPara(3))
-
-        print("in the second step", self.HS_Para)
         
         # HS Parameters
         self.hsParaGeneBtn.clicked.connect(lambda: self.getHsPara("Gene"))
@@ -230,7 +232,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.BRFHdrFile_path = self.BRFSpeFile_path.replace(".spe",".hdr")
 
     def RefCali(self):
-        self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, [], [])
+        self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, [], [], self.plant_mask)
         # Get the k and b
         self.k, self.b = self.reflect.getReflectEquation()
         # Unlock the view and Save function
@@ -264,11 +266,11 @@ class Main(QMainWindow, Ui_MainWindow):
                     pix = QPixmap.fromImage(frame)
                     item = QGraphicsPixmapItem(pix)
                     # the rgb scene in Tab1
-                    self.scene = QGraphicsScene()
-                    self.scene.addItem(item)
-                    self.hsiRawView.setScene(self.scene)
+                    self.raw_scene = QGraphicsScene()
+                    self.raw_scene.addItem(item)
+                    self.hsiRawView.setScene(self.raw_scene)
                     # Make the graph self-adaptive to the canvas
-                    self.hsiRawView.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+                    self.hsiRawView.fitInView(self.raw_scene.sceneRect(), Qt.KeepAspectRatio)
                     self.HSCurveBtn.setEnabled(True)
 
     def getBRFRgb(self, function):
@@ -280,6 +282,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.HSI_samples = self.HSI_info[2]
                 self.HSI = self.HSI_info[3]
                 self.HSI_wavelengths= self.HSI_info[4]
+                self.plant_mask = np.zeros((self.HSI_lines, self.HSI_samples), dtype=bool)
                 # Unlock the view and Save function
                 self.BRFRawViewBtn.setEnabled(True)
                 self.BRFRawSaveBtn.setEnabled(True)
@@ -301,9 +304,9 @@ class Main(QMainWindow, Ui_MainWindow):
                     pix = QPixmap.fromImage(frame)
                     item = QGraphicsPixmapItem(pix)
                     # the rgb scene in Tab1
-                    self.scene = QGraphicsScene()
-                    self.scene.addItem(item)
-                    self.hsiRawView.setScene(self.scene)
+                    self.raw_scene = QGraphicsScene()
+                    self.raw_scene.addItem(item)
+                    self.hsiRawView.setScene(self.raw_scene)
 
                     # Unlock
                     self.selectBox3Btn.setEnabled(True)
@@ -311,7 +314,7 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.HSCurveBtn.setEnabled(True)
 
     def selectBox(self, brf_flag):
-        self.view = hsiRawView(self.scene, brf_flag)
+        self.view = hsiRawView(self.raw_scene, brf_flag)
         #self.setCentralWidget(self.view)
         self.view.show()
         self.view.resize(600, 800)
@@ -342,22 +345,26 @@ class Main(QMainWindow, Ui_MainWindow):
         combo_box = self.sender()
         match index:
             case 1:
-                self.NDVI_TH = float(combo_box.currentText())
+                self.NDVI_TH_HIGH = float(combo_box.currentText())
             case 2:
-                self.ampl_LowTH = int(combo_box.currentText())
+                self.NDVI_TH_LOW = float(combo_box.currentText())
             case 3:
+                self.ampl_LowTH = int(combo_box.currentText())
+            case 4:
                 self.ampl_HighTH = int(combo_box.currentText())
 
     # Remove the background by NDVI
     def RmBg(self, function):
         match function:        
             case "Gene":
-                pre_data = pre.preprocess(self.HSI_info, self.NDVI_TH, self.ampl_LowTH, self.ampl_HighTH)
+                pre_data = pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
                 level1 = pre_data.getLevel1()
                 self.HSI_info = level1[0]
                 self.cur_proportion = level1[2]
                 self.NDVI = level1[3]
-                self.plant_mask = level1[4]
+                level1_mask = level1[4]
+                self.plant_mask = self.plant_mask | level1_mask
+                self.plantPixNum = self.cur_proportion * (self.HSI_lines * self.HSI_samples) 
 
                 # Unlock the view and Save function
                 self.RmBgViewBtn.setEnabled(True)
@@ -375,9 +382,9 @@ class Main(QMainWindow, Ui_MainWindow):
                 pix = QPixmap.fromImage(frame)
                 item = QGraphicsPixmapItem(pix)
                 # the rgb scene in Tab1
-                self.scene = QGraphicsScene()
-                self.scene.addItem(item)
-                self.hsidealtView.setScene(self.scene)
+                self.dealt_scene = QGraphicsScene()
+                self.dealt_scene.addItem(item)
+                self.hsidealtView.setScene(self.dealt_scene)
                 # Make the graph self-adaptive to the canvas
                 #self.hsidealtView.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
                 '''
@@ -393,10 +400,14 @@ class Main(QMainWindow, Ui_MainWindow):
             # To remove the shadow and the bright of the plot
         match function:
             case "Gene":
-                pre_data = pre.preprocess(self.HSI_info, self.NDVI_TH, self.ampl_LowTH, self.ampl_HighTH)
+                pre_data = pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
                 level2 = pre_data.getLevel2()
                 self.HSI_info = level2[0]
                 self.cur_proportion = level2[3]
+                self.plantPixNum = self.cur_proportion * (self.HSI_lines * self.HSI_samples)
+                level2_mask = level2[2]                
+                self.plant_mask = self.plant_mask | level2_mask
+                
                 # Unlock the view and Save function
                 self.RmDbViewBtn.setEnabled(True)
                 self.RmDbSaveBtn.setEnabled(True)
@@ -413,9 +424,9 @@ class Main(QMainWindow, Ui_MainWindow):
                 pix = QPixmap.fromImage(frame)
                 item = QGraphicsPixmapItem(pix)
                 # the rgb scene in Tab1
-                self.scene = QGraphicsScene()
-                self.scene.addItem(item)
-                self.hsidealtView.setScene(self.scene)
+                self.dealt_scene = QGraphicsScene()
+                self.dealt_scene.addItem(item)
+                self.hsidealtView.setScene(self.dealt_scene)
                 
     # import the amplititude along diferent wavelengths of 3% and 30% BRF
     def importRftCaliFile(self):
@@ -432,7 +443,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def getReflect(self, function):
         match function:        
             case "Gene":
-                self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b)
+                self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b, self.plant_mask)
                 self.reflect.getReflect()
                 # Unlock the view and Save function
                 self.RefViewBtn.setEnabled(True)
@@ -448,11 +459,11 @@ class Main(QMainWindow, Ui_MainWindow):
                 return
             
     def HSCurveView(self):
-        self.view = HSCurve(self.scene)
+        self.view = HSCurve(self.raw_scene)
         self.view.show()
 
     def RFCurveView(self):
-        self.view = RFCurve(self.scene)
+        self.view = RFCurve(self.raw_scene)
         self.view.show()
 
 
@@ -472,13 +483,15 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:
             case "Gene":
                 # change the non-plant pixel reflectance to 0 at all bands
+                '''
                 self.reflect.ReflectMatrix = np.transpose(self.reflect.ReflectMatrix, (0, 2, 1)) # exChange the second and the third dimension
-                self.reflect.ReflectMatrix[self.plant_mask,:] = 0
+                self.reflect.ReflectMatrix[~self.plant_mask,:] = 0
                 self.reflect.ReflectMatrix = np.transpose(self.reflect.ReflectMatrix, (0, 2, 1))
+                '''
 
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                 self.HS_Para = self.hsParaDb.currentText()
-                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model)
+                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
                 self.pro_data.calcHsParas()
 
                 # Unlock the view and Save function
@@ -497,8 +510,8 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model)
-
+                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                '''
                 self.progress_bar = QProgressBar(self)
                 self.progress_bar.setGeometry(30, 40, 200, 25)
                 self.progress_value = 0
@@ -507,6 +520,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.timer = QTimer()
                 self.timer.timeout.connect(self.calcLoop)
                 self.timer.start(1000)  # 每100毫秒更新一次进度条
+                '''
 
             case "Save":
                 self.pro_data.draw_pseudoColorImg("Save")
@@ -514,10 +528,10 @@ class Main(QMainWindow, Ui_MainWindow):
 
             case "View":
                 self.pro_data.draw_pseudoColorImg("View")
-
+    '''
     def calcLoop(self):
         count = 0
-        for i in range(self.HSI_lines*self.HSI_samples):
+        for i in range(self.plantPixNum):
             self.pro_data.CalcPhenotypeParas(i)
             count += 1
             if count == self.HSI_samples:
@@ -540,24 +554,16 @@ class Main(QMainWindow, Ui_MainWindow):
         #self.progress_bar.setValue(self.HSI_lines)
         self.timer.stop()
         event.accept()
-    
+    '''
+
     def outputAvgParas(self, function):
         match function:
             case "Gene":
-                
                 return
             
             case "Save":
                 return
     # ----------------------------Tab4-----------------------------
-
-
-
-
-
-
-
-
 
 
 class hsiRawView(QGraphicsView):

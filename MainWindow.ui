@@ -29,7 +29,7 @@ QTabBar::tab{height:30}
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="iconSize">
        <size>
@@ -646,7 +646,7 @@ font: 12pt &quot;Agency FB&quot;;</string>
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_34">
+          <layout class="QHBoxLayout" name="horizontalLayout_26">
            <item>
             <widget class="QFrame" name="frame_3">
              <property name="styleSheet">
@@ -697,32 +697,27 @@ font: 12pt &quot;Agency FB&quot;;</string>
                     <widget class="QComboBox" name="amplLowThDb">
                      <item>
                       <property name="text">
-                       <string>0</string>
+                       <string>2000</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>200</string>
+                       <string>4000</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>400</string>
-                      </property>
-                     </item>
-                     <item>
-                      <property name="text">
-                       <string>600</string>
-                      </property>
-                     </item>
-                     <item>
-                      <property name="text">
-                       <string>800</string>
+                       <string>3000</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
                        <string>1000</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>0</string>
                       </property>
                      </item>
                     </widget>
@@ -846,7 +841,77 @@ font: 12pt &quot;Agency FB&quot;;</string>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QComboBox" name="bgParaDb">
+                    <widget class="QLabel" name="label_14">
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>NDVI下限值：</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="bgNdviLowDb">
+                     <property name="iconSize">
+                      <size>
+                       <width>20</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>0</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>-1.0</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>-0.6</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>-0.2</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>0.2</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>0.6</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>0.8</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>1.0</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_13">
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>NDVI上限值：</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="bgNdviHighDb">
                      <property name="iconSize">
                       <size>
                        <width>20</width>
@@ -856,6 +921,11 @@ font: 12pt &quot;Agency FB&quot;;</string>
                      <item>
                       <property name="text">
                        <string>0.8</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>0</string>
                       </property>
                      </item>
                      <item>
