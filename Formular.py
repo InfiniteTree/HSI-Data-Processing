@@ -8,6 +8,7 @@ class FormulaInputWidget(QWidget):
 
         layout = QVBoxLayout()
         self.input_edit = QLineEdit()
+        
         self.input_edit.returnPressed.connect(self.evaluate_formula)
         layout.addWidget(self.input_edit)
 
@@ -21,7 +22,7 @@ class FormulaInputWidget(QWidget):
         except Exception as e:
             print("Error:", str(e))
 
-
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = FormulaInputWidget()

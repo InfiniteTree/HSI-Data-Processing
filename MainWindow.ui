@@ -1593,6 +1593,9 @@ font: 12pt &quot;Agency FB&quot;;</string>
                 <layout class="QHBoxLayout" name="horizontalLayout_41">
                  <item>
                   <widget class="QPushButton" name="AvgParaGeneBtn">
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="text">
                     <string>一键计算</string>
                    </property>
@@ -1602,6 +1605,9 @@ font: 12pt &quot;Agency FB&quot;;</string>
                   <widget class="QPushButton" name="AvgParaSaveBtn">
                    <property name="enabled">
                     <bool>false</bool>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="text">
                     <string>保存</string>

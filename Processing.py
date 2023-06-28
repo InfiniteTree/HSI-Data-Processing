@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 import math
 import csv
 import matplotlib.pyplot as plt
@@ -22,6 +23,8 @@ class process:
     channels = 0
     samples = 0
     waveStart = 0
+
+    y_pre = []
 
     ### Need to remap the band intelligently
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
@@ -71,10 +74,10 @@ class process:
                 denominator = self.ReflectMatrix[:,self.map_band["band531"],:] + self.ReflectMatrix[:,self.map_band["band570"],:]
                 denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = numerator / denominator
-                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[denominator == 0] = -0.2  # the denominator is zero, set it as 0
                 # All range in [-1, 1], while plant in [-0.2, 0.2]
                 self.ParaMatrix[self.ParaMatrix < -0.2] = -0.2
-                self.ParaMatrix[self.ParaMatrix > 0.2] = -0.2
+                self.ParaMatrix[self.ParaMatrix > 0.2] = 0.2
 
             case "MTVI2":
                 numerator =  1.5 * (1.2 * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]) - 2.5 * (self.ReflectMatrix[:,self.map_band["band670"],:] - self.ReflectMatrix[:,self.map_band["band550"],:]))
@@ -88,9 +91,9 @@ class process:
                 denominator = self.ReflectMatrix[:,self.map_band["band680"],:]
                 denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = numerator / denominator
-                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[denominator == 0] = 2  # the denominator is zero, set it as 0
                 self.ParaMatrix[self.ParaMatrix < 2] = 2
-                self.ParaMatrix[self.ParaMatrix > 8] = 2
+                self.ParaMatrix[self.ParaMatrix > 8] = 8
             
             case "DVI":
                 var_1 =  self.ReflectMatrix[:,self.map_band["band800"],:]
@@ -98,28 +101,28 @@ class process:
                 self.ParaMatrix = var_1 - var_2
                 
             case "SIPI":
-                numerator =  self.ReflectMatrix[:,self.map_band["band800"],:]
-                denominator = self.ReflectMatrix[:,self.map_band["band680"],:]
+                numerator =  self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band445"],:]
+                denominator = self.ReflectMatrix[:,self.map_band["band800"],:] + self.ReflectMatrix[:,self.map_band["band680"],:]
                 denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = numerator / denominator
                 self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
-                self.ParaMatrix[self.ParaMatrix < -0.1] = -0.1
-                self.ParaMatrix[self.ParaMatrix > 0.2] = -0.1
+                self.ParaMatrix[self.ParaMatrix < 0] = 0
+                self.ParaMatrix[self.ParaMatrix > 2] = 2
 
             case "PSRI":
                 numerator =  self.ReflectMatrix[:,self.map_band["band680"],:] - self.ReflectMatrix[:,self.map_band["band500"],:]
                 denominator = self.ReflectMatrix[:,self.map_band["band750"],:]
                 denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = numerator / denominator
-                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
-                self.ParaMatrix[self.ParaMatrix < -1] = 0
-                self.ParaMatrix[self.ParaMatrix > 1] = 0
+                self.ParaMatrix[denominator == 0] = -1  # the denominator is zero, set it as 0
+                self.ParaMatrix[self.ParaMatrix < -1] = -1
+                self.ParaMatrix[self.ParaMatrix > 1] = 1
 
             case "CRI1":
                 denominator_1 = self.ReflectMatrix[:,self.map_band["band510"],:]
                 denominator_2 = self.ReflectMatrix[:,self.map_band["band550"],:]
-                denominator_1[denominator_1 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
-                denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                denominator_1[denominator_1 == 0] = 0  # Avoid the denominator is zero, set it as 1 
+                denominator_2[denominator_2 == 0] = 0  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = 1/denominator_1 - 1/denominator_2
                 self.ParaMatrix[self.ParaMatrix < 0] = 0 
                 self.ParaMatrix[self.ParaMatrix > 15] = 0
@@ -131,7 +134,7 @@ class process:
                 denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = 1/denominator_1 - 1/denominator_2
                 self.ParaMatrix[self.ParaMatrix < 0] = 0 
-                self.ParaMatrix[self.ParaMatrix > 15] = 0
+                self.ParaMatrix[self.ParaMatrix > 15] = 15
 
 
             case "ARI1":
@@ -141,7 +144,7 @@ class process:
                 denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = 1/denominator_1 - 1/denominator_2
                 self.ParaMatrix[self.ParaMatrix < 0] = 0 
-                self.ParaMatrix[self.ParaMatrix > 0.2] = 0
+                self.ParaMatrix[self.ParaMatrix > 0.2] = 0.2
 
             case "ARI2":
                 denominator_1 = self.ReflectMatrix[:,self.map_band["band550"],:]
@@ -150,7 +153,7 @@ class process:
                 denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = self.ReflectMatrix[:,self.map_band["band800"],:] * (1/denominator_1 - 1/denominator_2)
                 self.ParaMatrix[self.ParaMatrix < 0] = 0 
-                self.ParaMatrix[self.ParaMatrix > 0.2] = 0
+                self.ParaMatrix[self.ParaMatrix > 0.2] = 0.2
 
             case "WBI":
                 numerator =  self.ReflectMatrix[:,self.map_band["band900"],:]
@@ -160,7 +163,7 @@ class process:
                 self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
                 # plant in [0.8, 1.2]
                 self.ParaMatrix[self.ParaMatrix <= 0.8] = 0.8
-                self.ParaMatrix[self.ParaMatrix >= 1.2] = 0.8
+                self.ParaMatrix[self.ParaMatrix >= 1.2] = 1.2
 
             # Bugs remain in PSSRa and PSSRb, which is caused by the raw data of band680/band635 
             # (reflectance is approximately zero and make the calculation result too large)
@@ -169,20 +172,18 @@ class process:
                 denominator = self.ReflectMatrix[:,self.map_band["band680"],:]
                 denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = numerator / denominator
-                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[denominator == 0] = 2  # the denominator is zero, set it as 0
                 self.ParaMatrix[self.ParaMatrix < 2] = 2
-                self.ParaMatrix[self.ParaMatrix > 8] = 2
+                self.ParaMatrix[self.ParaMatrix > 8] = 8
             
             case "PSSRb":
                 numerator =  self.ReflectMatrix[:,self.map_band["band800"],:]
                 denominator = self.ReflectMatrix[:,self.map_band["band635"],:]
                 denominator[denominator <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = numerator / denominator
-                self.ParaMatrix[denominator == 0] = 0  # the denominator is zero, set it as 0
+                self.ParaMatrix[denominator == 0] = 2  # the denominator is zero, set it as 0
                 self.ParaMatrix[self.ParaMatrix < 2] = 2
-                self.ParaMatrix[self.ParaMatrix > 8] = 2
-
-
+                self.ParaMatrix[self.ParaMatrix > 8] = 8
 
             # Self defined formular
             case "user-defined":
@@ -251,20 +252,21 @@ class process:
                 im = ax.imshow(self.ParaMatrix, cmap='hot',interpolation='nearest')
                 ax.set_title("Pseudo_Color Map of the Relative Values on WBI", y=1.05)
 
-
         cbar = fig.colorbar(im)
         if flag == "Save": 
             plt.savefig("figures/test/process/" + self.hsPara + ".jpg")
+            plt.close()
+
         if flag == "View": # Consider to just load the figure here!!!!!!!!!
             plt.show()
 
     # Machine learning prediction
-    def CalcPhenotypeParas(self):
+    def CalcPhenotypeParas(self, index):
         # Fault Value Detection
             # Get the remaining parameters by using the trained model to predict
             if self.phenotypeParaModel == "PLSR":
                 data = pd.read_csv("model/LearningData/TrainData.csv")
-                print("Dataset of Train Model loaded...")
+                #print("Dataset of Train Model loaded...")
                 train_x = data.drop(['SPAD',"A1200", "N", "Ca", "Cb"],axis=1)
                 #train_y = data[['SPAD',"A1200", "N", "Ca", "Cb"]].copy()
                 train_y = data[[self.phenotypePara]]
@@ -275,17 +277,16 @@ class process:
                 # pls_param_grid = {'n_components': list(range(10,20))}
                 # Train the data
                 pls_param_grid = {'n_components':[10]}  
+
+                warnings.filterwarnings('ignore', category=UserWarning)
                 pls = GridSearchCV(PLSRegression(), param_grid=pls_param_grid,scoring='r2',cv=10)
                 pls.fit(train_x, train_y)
 
-                test_x = []
-
-                for i in range(self.lines * self.samples):
-                    test_x.append = self.ReflectMatrix[i/self.samples:,6:-16,:i%self.samples] # The data set of the train model only contains HS in parts of wavelength range
+                # test_x stores the raw data for one pixel; y_pre stores the dealt results for all pixels
+                test_x = self.ReflectMatrix[index//self.samples,6:-16,index%self.samples] # The data set of the train model only contains HS in parts of wavelength range
                 test_x = pd.Series(test_x, dtype='float32')
                 test_x = test_x.to_frame().T
-                y_pre = pls.predict(test_x)
-
+                self.y_pre.append(pls.predict(test_x))
 
     # export file 1 to store the spectra data  
     def HyperspectraCurve(self, HSI_info, proportion):

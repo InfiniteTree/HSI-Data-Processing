@@ -72,7 +72,7 @@ class preprocess:
         print("BG_counter is", self.BG_Counter)
         self.HSI_info = [self.lines, self.channels, self.samples, HSI, self.wavelengths]
 
-        return HSI, np.array(Plant_pos), self.BG_Counter, NDVI
+        return HSI, np.array(Plant_pos), self.BG_Counter, NDVI, level1_mask
 
     # Get the Level1 HSI by removing the background 
     def getLevel1(self):
@@ -81,10 +81,11 @@ class preprocess:
         HSI_1 = Level_1[0]
         self.BG_Counter = Level_1[2]
         NDVI = Level_1[3]
+        level1_mask = Level_1[4]
         HSI_info_L1 = [self.lines, self.channels, self.samples, HSI_1, self.wavelengths]
         self.cur_proportion = float((self.PixelSum - self.BG_Counter)/self.PixelSum)
 
-        return HSI_info_L1, self.BG_Counter, self.cur_proportion, NDVI
+        return HSI_info_L1, self.BG_Counter, self.cur_proportion, NDVI, level1_mask
     
     ######---------------------------- Level 2 proprocessing ----------------------------######
     ###----------------------------- Remove the dark and bright  ---------------------------###

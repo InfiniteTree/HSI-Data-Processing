@@ -1,8 +1,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QVBoxLayout, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem, QGraphicsPathItem, QLabel
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QGraphicsScene, QVBoxLayout, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem, QGraphicsPathItem, QLabel, QProgressBar
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QPainterPath
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QPointF
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QPointF, QTimer
 
 import sys
 import os
@@ -79,6 +79,8 @@ class Main(QMainWindow, Ui_MainWindow):
     
     l1_rgbimg_path = "" # level 1 img rgb file path
     l2_rgbimg_path = "" # level 2 img rgb file path
+
+    plant_mask = [] # bool value mask for the plant: True implies a non-plant pixel while False implies a plant pixel
 
     # ------------------------------------Tab3------------------------------------
     Hs_Para = ""
@@ -172,6 +174,7 @@ class Main(QMainWindow, Ui_MainWindow):
         # ------------------------------------Tab3------------------------------------
         # Get the current text in the drab bar
         self.HS_Para = self.hsParaDb.currentText()
+        print("in the intialial step", self.HS_Para)
         self.Ptsths_Para = self.ptsthsParaDb.currentText()
         self.Ptsths_Para_Model = self.ptsthsParaModelDb.currentText()
 
@@ -180,13 +183,20 @@ class Main(QMainWindow, Ui_MainWindow):
         self.ptsthsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(2))
         self.ptsthsParaModelDb.currentIndexChanged.connect(lambda: self.getProcessPara(3))
 
+        print("in the second step", self.HS_Para)
+        
+        # HS Parameters
         self.hsParaGeneBtn.clicked.connect(lambda: self.getHsPara("Gene"))
         self.hsParaSaveBtn.clicked.connect(lambda: self.getHsPara("Save"))
         self.hsParaViewBtn.clicked.connect(lambda: self.getHsPara("View"))
-
+        
+        # Plant Phenotypic Parameters
         self.ptsthsGeneBtn.clicked.connect(lambda: self.getPtsthsPara("Gene"))
         self.ptsthsSaveBtn.clicked.connect(lambda: self.getPtsthsPara("Save"))
         self.ptsthsViewBtn.clicked.connect(lambda: self.getPtsthsPara("View"))
+
+        self.AvgParaGeneBtn.clicked.connect(lambda: self.outputAvgParas("Gene"))
+        self.AvgParaGeneBtn.clicked.connect(lambda: self.outputAvgParas("Save"))
 
     ######----------------------------------------------------------------------------------------------------######
     #####-------------------------------------Helper Function start here---------------------------------------#####
@@ -216,8 +226,7 @@ class Main(QMainWindow, Ui_MainWindow):
         if selected_file:
             self.BRFSpeFile_path = selected_file
             self.BRFSpeFile_path = self.BRFSpeFile_path.replace("\\","/")
-            self.BRFPathlineEdit.setText(self.BRFSpeFile_path)
-            
+            self.BRFPathlineEdit.setText(self.BRFSpeFile_path)            
             self.BRFHdrFile_path = self.BRFSpeFile_path.replace(".spe",".hdr")
 
     def RefCali(self):
@@ -226,7 +235,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.k, self.b = self.reflect.getReflectEquation()
         # Unlock the view and Save function
         QtWidgets.QMessageBox.about(self, "", "反射板校准已就绪")
-
 
     def getRgb(self, function):
         match function:
@@ -261,9 +269,7 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.hsiRawView.setScene(self.scene)
                     # Make the graph self-adaptive to the canvas
                     self.hsiRawView.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
-
                     self.HSCurveBtn.setEnabled(True)
-
 
     def getBRFRgb(self, function):
         match function:
@@ -347,11 +353,12 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:        
             case "Gene":
                 pre_data = pre.preprocess(self.HSI_info, self.NDVI_TH, self.ampl_LowTH, self.ampl_HighTH)
-                
                 level1 = pre_data.getLevel1()
                 self.HSI_info = level1[0]
                 self.cur_proportion = level1[2]
                 self.NDVI = level1[3]
+                self.plant_mask = level1[4]
+
                 # Unlock the view and Save function
                 self.RmBgViewBtn.setEnabled(True)
                 self.RmBgSaveBtn.setEnabled(True)
@@ -362,14 +369,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.l1_rgbimg_path = "figures/test/pre_process/" + str(self.impFileNum) + "_level1.jpg"
                 l1_rgbimg.save(self.l1_rgbimg_path)
                 QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
-                '''
-                fig, ax = plt.subplots(figsize=(6, 8))
-                im = ax.imshow(self.NDVI, cmap='gray',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on NDVI", y=1.05)
-                fig.colorbar(im)
-                fig.savefig("figures/test/pre_process/" + str(self.impFileNum) + "_level1.jpg")
-                QtWidgets.QMessageBox.about(self, "", "NDVI背景生成成功")
-                '''
                 
             case "View":
                 frame = QImage(self.l1_rgbimg_path)
@@ -418,8 +417,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.scene.addItem(item)
                 self.hsidealtView.setScene(self.scene)
                 
-
-
     # import the amplititude along diferent wavelengths of 3% and 30% BRF
     def importRftCaliFile(self):
         file_dialog = QFileDialog()
@@ -465,7 +462,7 @@ class Main(QMainWindow, Ui_MainWindow):
         match index:
             case 1:
                 self.Hs_Para = combo_box.currentText()
-                print(self.Hs_Para)
+                print("In the change step:",self.Hs_Para)
             case 2:
                 self.Ptsths_Para = combo_box.currentText()
             case 3:
@@ -474,7 +471,13 @@ class Main(QMainWindow, Ui_MainWindow):
     def getHsPara(self, function):
         match function:
             case "Gene":
+                # change the non-plant pixel reflectance to 0 at all bands
+                self.reflect.ReflectMatrix = np.transpose(self.reflect.ReflectMatrix, (0, 2, 1)) # exChange the second and the third dimension
+                self.reflect.ReflectMatrix[self.plant_mask,:] = 0
+                self.reflect.ReflectMatrix = np.transpose(self.reflect.ReflectMatrix, (0, 2, 1))
+
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
+                self.HS_Para = self.hsParaDb.currentText()
                 self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model)
                 self.pro_data.calcHsParas()
 
@@ -495,11 +498,15 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                 self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model)
-                self.pro_data.CalcPhenotypeParas()
-                # Unlock the view and Save function
-                self.ptsthsViewBtn.setEnabled(True)
-                self.ptsthsSaveBtn.setEnabled(True)
-                QtWidgets.QMessageBox.about(self, "", "光合表型参数计算成功")
+
+                self.progress_bar = QProgressBar(self)
+                self.progress_bar.setGeometry(30, 40, 200, 25)
+                self.progress_value = 0
+                self.progress_bar.setValue(self.progress_value)
+
+                self.timer = QTimer()
+                self.timer.timeout.connect(self.calcLoop)
+                self.timer.start(1000)  # 每100毫秒更新一次进度条
 
             case "Save":
                 self.pro_data.draw_pseudoColorImg("Save")
@@ -508,9 +515,50 @@ class Main(QMainWindow, Ui_MainWindow):
             case "View":
                 self.pro_data.draw_pseudoColorImg("View")
 
+    def calcLoop(self):
+        count = 0
+        for i in range(self.HSI_lines*self.HSI_samples):
+            self.pro_data.CalcPhenotypeParas(i)
+            count += 1
+            if count == self.HSI_samples:
+                print("count + 1")
+                self.progress_value += 1
+                count = 0
+                self.progress_bar.setValue(self.progress_value)
+                if (self.progress_value >=self.HSI_lines):
+                    self.timer.stop()
+                    print(len(self.pro_data.y_pre))
 
+                    # Unlock the view and Save function
+                    self.ptsthsViewBtn.setEnabled(True)
+                    self.ptsthsSaveBtn.setEnabled(True)
+                    QtWidgets.QMessageBox.about(self, "", "光合表型参数计算成功")
+            #QApplication.processEvents()  # 更新 UI，防止界面冻结
 
+    def closeEvent(self, event):
+        # 在窗口关闭时停止循环
+        #self.progress_bar.setValue(self.HSI_lines)
+        self.timer.stop()
+        event.accept()
+    
+    def outputAvgParas(self, function):
+        match function:
+            case "Gene":
+                
+                return
+            
+            case "Save":
+                return
     # ----------------------------Tab4-----------------------------
+
+
+
+
+
+
+
+
+
 
 class hsiRawView(QGraphicsView):
     def __init__(self, scene, brf_flag):
@@ -681,12 +729,12 @@ class RFCurve(QGraphicsView):
             plt.title("The Reflectance curve of the cross cursor point")
             plt.show()
     
-    # delete the cross path after close the event
+    # delete the cross path after close the event   
     def closeEvent(self, event):
         self.crosshair_item.setPath(QPainterPath())
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     md = Main(QMainWindow)
     md.show()
     sys.exit(app.exec_())
