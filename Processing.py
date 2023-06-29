@@ -24,7 +24,6 @@ class process:
     samples = 0
     waveStart = 0
 
-    y_pre = []
 
     ### Need to remap the band intelligently
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
@@ -43,15 +42,13 @@ class process:
         self.cur_proportion = self.Reflect_Info[5]
         self.waveStart = int(float(self.Reflect_Info[4][0]))
         self.plant_mask = plant_mask
+        self.ParaMatrix = np.zeros((self.lines, self.samples))
     
     def calImgSpecMean(self):
         return self.ReflectMatrix.mean(axis=(0,2)) / self.cur_proportion
 
     # Calculate the relative values the photosynthesis by the design formulas
     def calcHsParas(self):
-        self.ReflectMatrix = np.where(self.ReflectMatrix < 0, 0, self.ReflectMatrix)
-        self.ReflectMatrix = np.where(self.ReflectMatrix > 1, 1, self.ReflectMatrix)
-
         match self.hsPara:
             case "NDVI":
                 numerator =  self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band680"],:]
@@ -201,7 +198,7 @@ class process:
 
         #print(self.ParaMatrix)
 
-    def draw_pseudoColorImg(self, flag):
+    def draw_pseudoColorImg(self, op_flag, para_flag):
         #print(self.ParaMatrix)
         fig, ax = plt.subplots(figsize=(6, 8))
         #print(self.hsPara)
@@ -228,62 +225,76 @@ class process:
             max_row_f = self.lines
 
         cropped_image = masked_array[min_row_f:max_row_f+1, min_col_f:max_col_f+1]
+        match para_flag:
+            case 1:
+                match self.hsPara:
+                    case "NDVI":
+                        im = ax.imshow(cropped_image, cmap='gray',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on NDVI", y=1.05)
+                    case "OSAVI":
+                        im = ax.imshow(cropped_image, cmap='viridis',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on OSAVI", y=1.05)
+                    case "PSSRa":
+                        im = ax.imshow(cropped_image, cmap='spring',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on PSSRa", y=1.05)
+                    case "PSSRb":
+                        im = ax.imshow(cropped_image, cmap='summer',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on PSSRb", y=1.05)
+                    case "PRI":
+                        im = ax.imshow(cropped_image, cmap='magma',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on PRI", y=1.05)
+                    case "MTVI2":
+                        im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
 
-        match self.hsPara:
-            case "NDVI":
-                im = ax.imshow(cropped_image, cmap='gray',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on NDVI", y=1.05)
-            case "OSAVI":
+                    case "SR":
+                        im = ax.imshow(cropped_image, cmap='gray',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on SR", y=1.05)
+                    case "DVI":
+                        im = ax.imshow(cropped_image, cmap='viridis',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on DVI", y=1.05)
+                    case "SIPI":
+                        im = ax.imshow(cropped_image, cmap='spring',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on SIPI", y=1.05)
+                    case "PSRI":
+                        im = ax.imshow(cropped_image, cmap='summer',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on PSRI", y=1.05)
+                    case "CRI1":
+                        im = ax.imshow(cropped_image, cmap='magma',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on CRI1", y=1.05)
+                    case "CRI2":
+                        im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on CRI2", y=1.05)
+                    case "ARI1":
+                        im = ax.imshow(cropped_image, cmap='summer',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on ARI1", y=1.05)
+                    case "ARI2":
+                        im = ax.imshow(cropped_image, cmap='magma',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on ARI2", y=1.05)
+                    case "WBI":
+                        im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
+                        ax.set_title("Pseudo_Color Map of the Relative Values on WBI", y=1.05)
+
+                cbar = fig.colorbar(im)
+                if op_flag == "Save": 
+                    plt.savefig("figures/test/process/" + self.hsPara + ".jpg")
+                    plt.close()
+
+                if op_flag == "View": # Consider to just load the figure here!!!!!!!!!
+                    plt.show()
+            
+            case 2:
                 im = ax.imshow(cropped_image, cmap='viridis',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on OSAVI", y=1.05)
-            case "PSSRa":
-                im = ax.imshow(cropped_image, cmap='spring',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on PSSRa", y=1.05)
-            case "PSSRb":
-                im = ax.imshow(cropped_image, cmap='summer',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on PSSRb", y=1.05)
-            case "PRI":
-                im = ax.imshow(cropped_image, cmap='magma',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on PRI", y=1.05)
-            case "MTVI2":
-                im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
+                ax.set_title("Pseudo_Color Map of the Relative Values on SPAD", y=1.05)
+                cbar = fig.colorbar(im)
+                if op_flag == "Save": 
+                    plt.savefig("figures/test/process/" + self.phenotypePara + ".jpg")
+                    plt.close()
 
-            case "SR":
-                im = ax.imshow(cropped_image, cmap='gray',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on SR", y=1.05)
-            case "DVI":
-                im = ax.imshow(cropped_image, cmap='viridis',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on DVI", y=1.05)
-            case "SIPI":
-                im = ax.imshow(cropped_image, cmap='spring',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on SIPI", y=1.05)
-            case "PSRI":
-                im = ax.imshow(cropped_image, cmap='summer',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on PSRI", y=1.05)
-            case "CRI1":
-                im = ax.imshow(cropped_image, cmap='magma',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on CRI1", y=1.05)
-            case "CRI2":
-                im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on CRI2", y=1.05)
-            case "ARI1":
-                im = ax.imshow(cropped_image, cmap='summer',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on ARI1", y=1.05)
-            case "ARI2":
-                im = ax.imshow(cropped_image, cmap='magma',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on ARI2", y=1.05)
-            case "WBI":
-                im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on WBI", y=1.05)
+                if op_flag == "View": # Consider to just load the figure here!!!!!!!!!
+                    plt.show()
 
-        cbar = fig.colorbar(im)
-        if flag == "Save": 
-            plt.savefig("figures/test/process/" + self.hsPara + ".jpg")
-            plt.close()
 
-        if flag == "View": # Consider to just load the figure here!!!!!!!!!
-            plt.show()
 
     # Machine learning prediction
     def CalcPhenotypeParas(self, index):
@@ -311,7 +322,7 @@ class process:
                 test_x = self.ReflectMatrix[index//self.samples,6:-16,index%self.samples] # The data set of the train model only contains HS in parts of wavelength range
                 test_x = pd.Series(test_x, dtype='float32')
                 test_x = test_x.to_frame().T
-                self.y_pre.append(pls.predict(test_x))
+                self.ParaMatrix[index//self.samples, index%self.samples] = pls.predict(test_x)
 
     # export file 1 to store the spectra data  
     def HyperspectraCurve(self, HSI_info, proportion):

@@ -11,12 +11,13 @@ class Reflectance:
     cur_proportion = 1
     BRF_positionRange = []  # position range of the refer board
     BRF_files = "" # path location fo the 3% and 30% Refer board Cali files
-    avg_reflect = [] # 1-D average reflectance for the whole plot in different bands
+    AVG_reflect = [] # 1-D average reflectance for the whole plot in different bands
     ReflectMatrix = [] # 3-D reflectance matrix for the whole plot
     k = [] # i.e. 300 k for 300 bands
     b = [] # i.e. 300 b for 300 bands
+    plantMask = []
     
-    def __init__(self, HSI_info, cur_proportion, BRF_positionRange, brf_files, k, b):
+    def __init__(self, HSI_info, cur_proportion, BRF_positionRange, brf_files, k, b, plant_mask):
         self.HSI_info = HSI_info
         #print(self.HSI_info)
         self.cur_proportion = cur_proportion
@@ -24,6 +25,7 @@ class Reflectance:
         self.BRF_files = brf_files
         self.k = k
         self.b = b
+        self.plantMask = plant_mask
         #print(self.BRF_positionRange)
 
 
@@ -185,6 +187,10 @@ class Reflectance:
         for idx in range(channels):
             ReflectMatrix[:, idx, :] = HSI[:, idx, :] * self.k[idx] + self.b[idx] 
         
+        # Ensure the values in the reflect matrix within [0,1]
+        ReflectMatrix = np.where(ReflectMatrix < 0, 0, ReflectMatrix)
+        ReflectMatrix = np.where(ReflectMatrix > 1, 1, ReflectMatrix)
+
         #print(ReflectMatrix.shape)
         print("ReflectMatrix is obtained.")
         return ReflectMatrix
@@ -212,16 +218,16 @@ class Reflectance:
         self.writeRef(RefAmplititudes_file, wavelengths, three_RefAmplititudes, thirty_RefAmplititudes)
 
     def getLeafAvgReflect(self):
-        print("proportion is",self.cur_proportion)
-        self.AVG_reflect = self.ReflectMatrix.mean(axis=(0,2)) / self.cur_proportion ### errors remian here
-
-
+        Transposed_ReflectMatrix = np.transpose(self.ReflectMatrix, (0, 2, 1))
+        plant_ReflectMatrix = Transposed_ReflectMatrix[~self.plantMask, :]
+        self.AVG_reflect = plant_ReflectMatrix.mean(axis=0)
+        
     def getReflect(self):
         self.ReflectMatrix = self.getReflectance()
         self.getLeafAvgReflect()
-        wavelengths = self.HSI_info[4]
+        wavelengths = self.HSI_info[4][2:-22]
         FirstRow = wavelengths
-        ReflectRow = self.avg_reflect
+        ReflectRow = self.AVG_reflect[2:-22]
         with open("results/test/ReflectCurve.csv","w",newline='') as f:
             writer = csv.writer(f)
             # Write the first row
@@ -232,8 +238,8 @@ class Reflectance:
     def visualizeReflect(self, saveFlag):
         # Write the reflectvector into a local csv file
         # Plotting
-        x = np.array(self.HSI_info[4])
-        y = np.array(self.AVG_reflect)
+        x = np.array(self.HSI_info[4])[2:-22] # only use the data within 400nm to 990nm
+        y = np.array(self.AVG_reflect)[2:-22] # only use the data within 400nm to 990nm
         plt.xticks(range(400, 1000, 100))
         plt.plot(x,y,c='b',label='Curve_poly_Fit')
         #plt.xticks(range(400, 1000, 100))

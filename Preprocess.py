@@ -18,7 +18,6 @@ class preprocess:
     NDVI = [] # shape = (n, 1, m)
     band800 = 195
     band670 = 134
-
     ######------------------------------ Level 2 Data -------------------------------######
     ShadowTHValue = 100 # the set mean threshold Hyspectra value for the leaves in shadow
     BrightTHValue = 800 # the set mean threshold Hyspectra value for the leaves in bright
