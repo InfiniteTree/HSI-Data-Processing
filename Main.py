@@ -25,7 +25,7 @@ class Main(QMainWindow, Ui_MainWindow):
     #####----------------------------------Parameters definition start here------------------------------------#####
     ####--------------------------------------------------------------------------------------------------------####
     # ------------------------------------Tab1------------------------------------
-    impFileNum = 0
+    fileNum = 0
     # in Windows: C:\...\... while in linux C:/.../...
     rawSpeFile_path = "" # The abs path of the raw spe file
     rawHdrFile_path = "" # The abs path of the raw hdr file
@@ -36,6 +36,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
     selected_directory = "" # The abs path of the raw spe file directory
     rawfile_paths = "" # The abs path of the raw spe files with batch processing
+    multiFlag = 0 # multiple files flag: 0 indicates not multiple while 1 indicates multiple
 
 
     # Data recording for selection rectangular
@@ -136,6 +137,10 @@ class Main(QMainWindow, Ui_MainWindow):
         # Import the multiples raw HSI files
         self.impRawsBtn.clicked.connect(self.importRaws)
 
+        # Multiple raw datas generating
+        self.multiRgbGeneBtn.clicked.connect(lambda:self.getRgb("Gene"))
+        self.multiRgbSaveBtn.clicked.connect(lambda:self.getRgb("Save"))
+        self.multiRgbViewBtn.clicked.connect(lambda:self.getRgb("View"))
 
         # Read the raw file
         self.rgbGeneBtn.clicked.connect(lambda:self.getRgb("Gene"))
@@ -206,8 +211,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.ptsthsSaveBtn.clicked.connect(lambda: self.getPtsthsPara("Save"))
         self.ptsthsViewBtn.clicked.connect(lambda: self.getPtsthsPara("View"))
 
-        self.AvgParaGeneBtn.clicked.connect(lambda: self.outputAvgParas("Gene"))
-        self.AvgParaGeneBtn.clicked.connect(lambda: self.outputAvgParas("Save"))
+        self.AvgHsParaGeneBtn.clicked.connect(lambda: self.outputAvgHsParas("Gene"))
+        self.AvgPtsthsParaGeneBtn.clicked.connect(lambda: self.outputAvgPtsthsParas("Gene"))
 
     ######----------------------------------------------------------------------------------------------------######
     #####-------------------------------------Helper Function start here---------------------------------------#####
@@ -220,18 +225,18 @@ class Main(QMainWindow, Ui_MainWindow):
             self.rawSpeFile_path = selected_file
             self.rawSpeFile_path = self.rawSpeFile_path.replace("\\","/")
             self.rawHSIPathlineEdit.setText(self.rawSpeFile_path)
-            
             self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
-            self.impFileNum += 1
+            self.fileNum = 1
 
-    def importRaws(self):  
+    def importRaws(self): 
         file_dialog = QFileDialog()
         self.selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
         if self.selected_directory:
             rawfile_names = os.listdir(self.selected_directory)
-            rawfile_names = [item.replace("\\","/") for item in rawfile_names]
+            rawfile_names = [item.replace("\\","/") for item in rawfile_names if item.endswith(".spe")] # only show the .spe file
             self.selected_directory = self.selected_directory.replace("\\","/")
             self.rawfile_paths = [self.selected_directory + "/" + item for item in rawfile_names]
+            self.fileNum = len(rawfile_names)
         
         # Bug remain here to do
         self.rawsLayout = QVBoxLayout(self.rawFilesWidget)
@@ -248,14 +253,23 @@ class Main(QMainWindow, Ui_MainWindow):
         self.rawsLayout.addStretch()  # Add stretchable space at the end
 
         self.RawFilesScrollArea.setWidgetResizable(True)
-    
-    def labelClicked(self, label):
-        self.rawSpeFile_path = selected_file
-        self.rawSpeFile_path = self.rawSpeFile_path.replace("\\","/")
-        self.rawHSIPathlineEdit.setText(self.rawSpeFile_path)    
-        self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
         
-        self.raw =  label.text() 
+        self.multiFlag = 1
+    
+    def labelClicked(self, label): 
+        self.raw = label.text()
+        self.rawSpeFile_path = self.selected_directory + "/" + self.raw
+        self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
+
+        # Refresh the widget background and Set the label background to the selected color
+        for child in self.rawFilesWidget.children():
+            if isinstance(child, QLabel):
+                child.setStyleSheet("background-color: None; font: 12pt 'Agency FB'; border: None;") 
+                            
+        label.setStyleSheet("background-color: lightblue")
+
+        #self.rawFilesWidget.setStyleSheet("background-color: transparent;")
+        
 
     def importBRFImg(self):
         selected_file, _ = QFileDialog.getOpenFileName(QMainWindow(), '选择文件', '', '.spe(*.spe*)')
@@ -282,20 +296,24 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.HSI = self.HSI_info[3]
                 self.HSI_wavelengths = self.HSI_info[4]
                 # Unlock the view and Save function
-                self.rgbViewBtn.setEnabled(True)
-                self.rgbSaveBtn.setEnabled(True)
+                if self.multiFlag == 0:
+                    self.rgbSaveBtn.setEnabled(True)
+                    self.rgbViewBtn.setEnabled(True)
+                elif self.multiFlag == 1:
+                    self.multiRgbSaveBtn.setEnabled(True)
+                    self.multiRgbViewBtn.setEnabled(True)
                 self.showHsiInfoBtn.setEnabled(True)
                 QtWidgets.QMessageBox.about(self, "", "高光谱原始数据处理成功")
             
             case "Save":
                 if self.rawSpeFile_path != "":
                     self.rgbImg = rd.drawImg(self.HSI_info)
-                    self.rgbImg.save("figures/test/raw" + str(self.impFileNum) + ".jpg")
+                    self.rgbImg.save("figures/test/raw" + str(self.fileNum) + ".jpg")
                     QtWidgets.QMessageBox.about(self, "", "高光谱可视化数据保存成功")
 
             case "View":
                 if self.rawSpeFile_path != "":                     
-                    self.rawjpgFile_path = "figures/test/raw" + str(self.impFileNum) + ".jpg"
+                    self.rawjpgFile_path = "figures/test/raw" + str(self.fileNum) + ".jpg"
                     frame = QImage(self.rawjpgFile_path)
                     pix = QPixmap.fromImage(frame)
                     item = QGraphicsPixmapItem(pix)
@@ -328,12 +346,12 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Save":
                 if self.BRFSpeFile_path != "":
                     self.rgbImg = rd.drawImg(self.HSI_info)
-                    self.rgbImg.save("figures/test/raw" + str(self.impFileNum) + ".jpg")
+                    self.rgbImg.save("figures/test/raw" + str(self.fileNum) + ".jpg")
                     QtWidgets.QMessageBox.about(self, "", "高光谱反射板可视化保存成功")
 
             case "View":
                 if self.BRFSpeFile_path != "":                     
-                    self.rawjpgFile_path = "figures/test/raw" + str(self.impFileNum) + ".jpg"
+                    self.rawjpgFile_path = "figures/test/raw" + str(self.fileNum) + ".jpg"
                     frame = QImage(self.rawjpgFile_path)
                     pix = QPixmap.fromImage(frame)
                     item = QGraphicsPixmapItem(pix)
@@ -430,7 +448,7 @@ class Main(QMainWindow, Ui_MainWindow):
             
             case "Save":
                 l1_rgbimg = rd.drawImg(self.HSI_info)
-                self.l1_rgbimg_path = "figures/test/pre_process/" + str(self.impFileNum) + "_level1.jpg"
+                self.l1_rgbimg_path = "figures/test/pre_process/" + str(self.fileNum) + "_level1.jpg"
                 l1_rgbimg.save(self.l1_rgbimg_path)
                 QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
                 
@@ -472,7 +490,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
             case "Save":
                 l2_rgbImg = rd.drawImg(self.HSI_info)
-                self.l2_rgbimg_path = "figures/test/pre_process/" + str(self.impFileNum) + "_level2.jpg"
+                self.l2_rgbimg_path = "figures/test/pre_process/" + str(self.fileNum) + "_level2.jpg"
                 l2_rgbImg.save(self.l2_rgbimg_path)
                 QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
 
@@ -608,12 +626,22 @@ class Main(QMainWindow, Ui_MainWindow):
         event.accept()
     '''
 
-    def outputAvgParas(self, function):
+    def outputAvgHsParas(self, function):
         match function:
             case "Gene":
+                reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
+                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data.exportHsParas("results/test/AvgHsPara.csv", self.fileNum)
+                QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
                 return
-            
-            case "Save":
+
+    def outputAvgPtsthsParas(self, function):
+        match function:
+            case "Gene":
+                reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
+                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data.exportPhenotypeParas("results/test/AvgPtsthsPara.csv", self.fileNum)
+                QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
                 return
     # ----------------------------Tab4-----------------------------
 

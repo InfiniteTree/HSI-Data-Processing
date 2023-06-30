@@ -8,7 +8,6 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import GridSearchCV
 #from sklearn.model_selection import train_test_split
 
-
 class process:
     Reflect_Info = []
     hsPara = ""
@@ -24,6 +23,7 @@ class process:
     samples = 0
     waveStart = 0
 
+    FirstRow = []  # The first row to write
 
     ### Need to remap the band intelligently
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
@@ -44,11 +44,9 @@ class process:
         self.plant_mask = plant_mask
         self.ParaMatrix = np.zeros((self.lines, self.samples))
     
-    def calImgSpecMean(self):
-        return self.ReflectMatrix.mean(axis=(0,2)) / self.cur_proportion
-
     # Calculate the relative values the photosynthesis by the design formulas
     def calcHsParas(self):
+        print(self.hsPara)
         match self.hsPara:
             case "NDVI":
                 numerator =  self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band680"],:]
@@ -119,8 +117,8 @@ class process:
             case "CRI1":
                 denominator_1 = self.ReflectMatrix[:,self.map_band["band510"],:]
                 denominator_2 = self.ReflectMatrix[:,self.map_band["band550"],:]
-                denominator_1[denominator_1 == 0] = 0  # Avoid the denominator is zero, set it as 1 
-                denominator_2[denominator_2 == 0] = 0  # Avoid the denominator is zero, set it as 1 
+                denominator_1[denominator_1 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
+                denominator_2[denominator_2 <= 0] = 1  # Avoid the denominator is zero, set it as 1 
                 self.ParaMatrix = 1/denominator_1 - 1/denominator_2
                 self.ParaMatrix[self.ParaMatrix < 0] = 0 
                 self.ParaMatrix[self.ParaMatrix > 15] = 0
@@ -294,8 +292,6 @@ class process:
                 if op_flag == "View": # Consider to just load the figure here!!!!!!!!!
                     plt.show()
 
-
-
     # Machine learning prediction
     def CalcPhenotypeParas(self, index):
         # Fault Value Detection
@@ -359,43 +355,77 @@ class process:
         return curveFile
 
     # export file to store the Parameters of Phenotype in terms of the single plot
-    def exportPhenotypeParas(self, Readfilename):
-
-        FirstRow = ["NDVI", "OSAVI", "PSSRa", "PSSRb", "RPI", "MTVI2", "SPAD","A1200", "N", "Ca", "Cb"]
-        avg_flag = 1
-        # Read the reflectance file and calculate the Phenotype parameters
-        with open(Readfilename,"r",newline='') as f:
-            contents = f.readlines()
-            reflectances = contents[1].split(",")
-            #print(reflectances)
-            reflectances = [float(num) for num in reflectances] # change str to float
-            PhenotypeParas= getPhenotypeParas(reflectances, avg_flag)
-
+    def exportHsParas(self, filename,fileNum):
+        FirstRow = ["photoIdx","NDVI","OSAVI", "PSSRa","PSSRb", "PRI","MTVI2","SR", "DVI", "SIPI", "PSRI", "CRI1", "CRI2", "ARI1", "ARI2", "WBI"]
+        # if self.hsPara not in self.FirstRow:
         # Export the results
-        with open("Results/Phenotype_Paras_withReflectance.csv","w",newline='') as f:
+
+        with open(filename,"w",newline='') as f:
             writer = csv.writer(f)
             writer.writerow(FirstRow)
-            writer.writerow(PhenotypeParas)
+            for i in range(fileNum):
+                meanHsPara = [] # initialize
+                meanHsPara.append[i]
+                for j in range(len(FirstRow)-1):
+                    self.hsPara = FirstRow[j+1]
+                    self.calcHsParas()
+                    non_zero_matrix = self.ParaMatrix[self.ParaMatrix != 0]
+                    meanHsPara.append(np.mean(non_zero_matrix)) # bugs remain here
+                writer.writerow(meanHsPara)
 
-        return
-
-    # export file to store the Parameters of Phenotype in terms of the single pixel
-    def exportPhenotypeParas_eachPixel(self, HSI_info,reflectanceMatrix):
-        lines = HSI_info[0]
-        channels= HSI_info[1]
-        samples = HSI_info[2]
-
-        FirstRow = ["Loc","NDVI", "OSAVI", "PSSRa", "PSSRb", "RPI", "MTVI2"]
-
-        avg_flag = 0
-        PhenotypeParas= []
-
+    def exportPhenotypeParas(self, filename, fileNum):
+        FirstRow = ["PlotIdx","SPAD", "A1200", "N", "Ca", "Cb"]
+        
+        # if self.hsPara not in self.FirstRow:
         # Export the results
-        with open("Results/Phenotype_Paras_eachPixel.csv","w",newline='') as f:
+        with open(filename,"w",newline='') as f:
             writer = csv.writer(f)
             writer.writerow(FirstRow)
-            for i in range(samples*lines):
-                row = i//samples
-                col = i%samples
-                PhenotypeParas = self.getPhenotypeParas(reflectanceMatrix[row,:,col], avg_flag)
-                writer.writerow([(row,col)]+PhenotypeParas)
+            for i in range(fileNum):
+                dataRow = [] # initialize
+                dataRow.append[i]
+                for j in range(len(FirstRow)):
+                    if self.phenotypeParaModel == "PLSR":
+                        data = pd.read_csv("model/LearningData/TrainData.csv")
+                        #print("Dataset of Train Model loaded...")
+                        train_x = data.drop(['SPAD',"A1200", "N", "Ca", "Cb"],axis=1)
+                        #train_y = data[['SPAD',"A1200", "N", "Ca", "Cb"]].copy()
+                        match j:
+                            case 0:
+                                self.phenotypePara = "SPAD"
+                            case 1:
+                                self.phenotypePara = "A1200"
+                            case 2:
+                                self.phenotypePara = "N"
+                            case 3:
+                                self.phenotypePara = "Ca"
+                            case 4:
+                                self.phenotypePara = "Cb"
+                        train_y = data[[self.phenotypePara]]
+
+                        train_x = pd.DataFrame(train_x, dtype='float32')
+                        train_y = pd.DataFrame(train_y, dtype='float32')
+
+                        # pls_param_grid = {'n_components': list(range(10,20))}
+                        # Train the data
+                        pls_param_grid = {'n_components':[10]}  
+
+                        warnings.filterwarnings('ignore', category=UserWarning)
+                        pls = GridSearchCV(PLSRegression(), param_grid=pls_param_grid,scoring='r2',cv=10)
+                        pls.fit(train_x, train_y)
+
+                        # test_x stores the raw data for one pixel; y_pre stores the dealt results for all pixels
+                        expanded_mask = np.expand_dims(self.plant_mask, axis=1)
+                        expanded_mask = np.repeat(expanded_mask, self.channels, axis=1)
+                        masked_array = np.ma.array(self.ReflectMatrix, mask=expanded_mask)
+
+                        test_x = np.mean(masked_array[:, 6:-16, :],axis=(0,2)) # The data set of the train model only contains HS in parts of wavelength range
+
+                        test_x = pd.Series(test_x, dtype='float32')
+                        test_x = test_x.to_frame().T
+                        predict_y = pls.predict(test_x)
+                        dataRow.append(predict_y[0][0])
+                writer.writerow(dataRow)
+
+
+
