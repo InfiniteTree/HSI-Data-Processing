@@ -6,7 +6,7 @@ import colorsys
 import csv
 from sklearn.cluster import KMeans
 
-import ReadData
+#import ReadData
 
 # Define the thershold of the background
 lower_hsv = np.array([20, 100, 60]) 
@@ -62,9 +62,7 @@ def get_RGBimg(HSI_info, band1, band2, band3):
         img[:,:,0] = HSI_npArray[:,band1-Window+k,:]
         img[:,:,1] = HSI_npArray[:,band2-Window+k,:]
         img[:,:,2] = HSI_npArray[:,band3-Window+k,:]
-
     return img
-
 
 def get_HSVimg(RGBimg):
     #rgb_image = RGBimg.convert('RGB')

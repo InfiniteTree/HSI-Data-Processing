@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1440</width>
+    <width>1142</width>
     <height>834</height>
    </rect>
   </property>
@@ -42,7 +42,7 @@ QTabBar::tab{height:30}
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="iconSize">
        <size>
@@ -102,109 +102,6 @@ font: 12pt &quot;Agency FB&quot;;
               <enum>QFrame::Raised</enum>
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_24">
-              <item>
-               <widget class="QScrollArea" name="RawFilesScrollArea">
-                <property name="styleSheet">
-                 <string notr="true">border: 1px solid black;</string>
-                </property>
-                <property name="widgetResizable">
-                 <bool>true</bool>
-                </property>
-                <widget class="QWidget" name="scrollAreaWidgetContents_2">
-                 <property name="geometry">
-                  <rect>
-                   <x>0</x>
-                   <y>0</y>
-                   <width>236</width>
-                   <height>701</height>
-                  </rect>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_19">
-                  <item>
-                   <widget class="QPushButton" name="impRawsBtn">
-                    <property name="font">
-                     <font>
-                      <family>Agency FB</family>
-                      <pointsize>12</pointsize>
-                      <weight>50</weight>
-                      <italic>false</italic>
-                      <bold>false</bold>
-                     </font>
-                    </property>
-                    <property name="cursor">
-                     <cursorShape>PointingHandCursor</cursorShape>
-                    </property>
-                    <property name="statusTip">
-                     <string/>
-                    </property>
-                    <property name="text">
-                     <string>导入多张</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QWidget" name="rawFilesWidget" native="true">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                      <horstretch>100</horstretch>
-                      <verstretch>90</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">background-color: None;</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_43">
-                    <item>
-                     <widget class="QPushButton" name="multiRgbGeneBtn">
-                      <property name="cursor">
-                       <cursorShape>PointingHandCursor</cursorShape>
-                      </property>
-                      <property name="text">
-                       <string>处理</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="multiRgbSaveBtn">
-                      <property name="enabled">
-                       <bool>false</bool>
-                      </property>
-                      <property name="cursor">
-                       <cursorShape>PointingHandCursor</cursorShape>
-                      </property>
-                      <property name="text">
-                       <string>保存</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="multiRgbViewBtn">
-                      <property name="enabled">
-                       <bool>false</bool>
-                      </property>
-                      <property name="cursor">
-                       <cursorShape>PointingHandCursor</cursorShape>
-                      </property>
-                      <property name="statusTip">
-                       <string extracomment="click"/>
-                      </property>
-                      <property name="text">
-                       <string>查看</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </widget>
-               </widget>
-              </item>
               <item>
                <widget class="QFrame" name="frame_11">
                 <property name="sizePolicy">
@@ -712,7 +609,7 @@ font: 12pt &quot;Agency FB&quot;;
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>358</width>
+                         <width>454</width>
                          <height>109</height>
                         </rect>
                        </property>
@@ -1306,375 +1203,88 @@ font: 12pt &quot;Agency FB&quot;;</string>
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <widget class="QFrame" name="frame_14">
-           <property name="geometry">
-            <rect>
-             <x>300</x>
-             <y>40</y>
-             <width>441</width>
-             <height>681</height>
-            </rect>
-           </property>
-           <property name="autoFillBackground">
-            <bool>false</bool>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">border: 1px solid black;</string>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_12">
-            <item>
-             <widget class="QFrame" name="frame_10">
-              <property name="styleSheet">
-               <string notr="true">border: 1px solid black;</string>
+          <layout class="QHBoxLayout" name="horizontalLayout_33">
+           <item>
+            <widget class="QScrollArea" name="RawFilesScrollArea">
+             <property name="styleSheet">
+              <string notr="true">border: 1px solid black;</string>
+             </property>
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContents_2">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>528</width>
+                <height>727</height>
+               </rect>
               </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_8">
+              <layout class="QVBoxLayout" name="verticalLayout_19">
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_30">
-                 <item>
-                  <widget class="QLabel" name="label_11">
-                   <property name="styleSheet">
-                    <string notr="true">Border:None;</string>
-                   </property>
-                   <property name="text">
-                    <string>光谱指数</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_12">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="hsParaDb">
-                   <item>
-                    <property name="text">
-                     <string>NDVI</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>OSAVI</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>PSSRa</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>PSSRb</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>PRI</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>MTVI2</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>DVI</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>SIPI</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>PSRI</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>CRI1</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>CRI2</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>ARI1</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>ARI2</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>WBI</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>user-defined</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                </layout>
+                <widget class="QPushButton" name="impRawsBtn">
+                 <property name="font">
+                  <font>
+                   <family>Agency FB</family>
+                   <pointsize>12</pointsize>
+                   <weight>50</weight>
+                   <italic>false</italic>
+                   <bold>false</bold>
+                  </font>
+                 </property>
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="statusTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>导入数据集</string>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_7">
-                 <item>
-                  <widget class="QLabel" name="label_9">
-                   <property name="styleSheet">
-                    <string notr="true">Border:None;</string>
-                   </property>
-                   <property name="text">
-                    <string>输入公式：</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="HSFmlInput"/>
-                 </item>
-                </layout>
+                <widget class="QWidget" name="rawFilesWidget" native="true">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                   <horstretch>100</horstretch>
+                   <verstretch>90</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">background-color: None;</string>
+                 </property>
+                </widget>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_31">
+                <layout class="QHBoxLayout" name="horizontalLayout_43">
                  <item>
-                  <widget class="QPushButton" name="hsParaGeneBtn">
+                  <widget class="QPushButton" name="multiGeneBtn">
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="text">
-                    <string>计算</string>
+                    <string>一键处理</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="hsParaSaveBtn">
+                  <widget class="QPushButton" name="multiViewBtn">
                    <property name="enabled">
                     <bool>false</bool>
                    </property>
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
-                   <property name="text">
-                    <string>保存</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="hsParaViewBtn">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="text">
-                    <string>显示</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QFrame" name="frame_12">
-              <property name="styleSheet">
-               <string notr="true">border: 1px solid black;</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_10">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_35">
-                 <item>
-                  <widget class="QLabel" name="label_15">
-                   <property name="styleSheet">
-                    <string notr="true">Border:None;</string>
-                   </property>
-                   <property name="text">
-                    <string>光合速率表型参数</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_15">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="ptsthsParaDb">
-                   <property name="iconSize">
-                    <size>
-                     <width>20</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>SPAD</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>A1200</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>N</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Ca</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Cb</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_36">
-                 <item>
-                  <widget class="QLabel" name="label_16">
                    <property name="statusTip">
-                    <string notr="true"/>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">Border:None;</string>
+                    <string extracomment="click"/>
                    </property>
                    <property name="text">
-                    <string>机器学习模型</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_16">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="ptsthsParaModelDb">
-                   <property name="iconSize">
-                    <size>
-                     <width>20</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>PLSR</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_37">
-                 <item>
-                  <widget class="QPushButton" name="ptsthsGeneBtn">
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="text">
-                    <string>计算</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="ptsthsSaveBtn">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="text">
-                    <string>保存</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="ptsthsViewBtn">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="text">
-                    <string>显示</string>
+                    <string>查看</string>
                    </property>
                   </widget>
                  </item>
@@ -1682,155 +1292,528 @@ font: 12pt &quot;Agency FB&quot;;</string>
                </item>
               </layout>
              </widget>
-            </item>
-            <item>
-             <widget class="QFrame" name="frame_13">
-              <property name="styleSheet">
-               <string notr="true">border: 1px solid black;</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_11">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_39">
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="frame_14">
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border: 1px solid black;</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_12">
+              <item>
+               <widget class="QFrame" name="frame_10">
+                <property name="styleSheet">
+                 <string notr="true">border: 1px solid black;</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_8">
                  <item>
-                  <widget class="QLabel" name="label_17">
-                   <property name="styleSheet">
-                    <string notr="true">Border:None;</string>
-                   </property>
-                   <property name="text">
-                    <string>整图相关参数</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_17">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="AvgParaDb">
-                   <property name="iconSize">
-                    <size>
-                     <width>20</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_30">
                    <item>
-                    <property name="text">
-                     <string>平均值</string>
-                    </property>
+                    <widget class="QLabel" name="label_11">
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>光谱指数</string>
+                     </property>
+                    </widget>
                    </item>
                    <item>
-                    <property name="text">
-                     <string>中位数</string>
-                    </property>
+                    <spacer name="horizontalSpacer_12">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
                    </item>
-                  </widget>
+                   <item>
+                    <widget class="QComboBox" name="hsParaDb">
+                     <item>
+                      <property name="text">
+                       <string>NDVI</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>OSAVI</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>PSSRa</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>PSSRb</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>PRI</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>MTVI2</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>DVI</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>SIPI</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>PSRI</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>CRI1</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>CRI2</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>ARI1</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>ARI2</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>WBI</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>user-defined</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_7">
+                   <item>
+                    <widget class="QLabel" name="label_9">
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>输入公式：</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="HSFmlInput"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_31">
+                   <item>
+                    <widget class="QPushButton" name="hsParaGeneBtn">
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>计算</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="hsParaSaveBtn">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>保存</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="hsParaViewBtn">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>显示</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_40">
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="frame_12">
+                <property name="styleSheet">
+                 <string notr="true">border: 1px solid black;</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_10">
                  <item>
-                  <widget class="QLabel" name="label_18">
-                   <property name="statusTip">
-                    <string notr="true"/>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">Border:None;</string>
-                   </property>
-                   <property name="text">
-                    <string>机器学习模型</string>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayout_35">
+                   <item>
+                    <widget class="QLabel" name="label_15">
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>光合速率表型参数</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_15">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="ptsthsParaDb">
+                     <property name="iconSize">
+                      <size>
+                       <width>20</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>SPAD</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>A1200</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>N</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Ca</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Cb</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_18">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
+                  <layout class="QHBoxLayout" name="horizontalLayout_36">
+                   <item>
+                    <widget class="QLabel" name="label_16">
+                     <property name="statusTip">
+                      <string notr="true"/>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>机器学习模型</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_16">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="ptsthsParaModelDb">
+                     <property name="iconSize">
+                      <size>
+                       <width>20</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>PLSR</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="AvgParaModelDb">
-                   <property name="iconSize">
-                    <size>
-                     <width>20</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_37">
                    <item>
-                    <property name="text">
-                     <string>PLSR模型</string>
-                    </property>
+                    <widget class="QPushButton" name="ptsthsGeneBtn">
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>计算</string>
+                     </property>
+                    </widget>
                    </item>
                    <item>
-                    <property name="text">
-                     <string/>
-                    </property>
+                    <widget class="QPushButton" name="ptsthsSaveBtn">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>保存</string>
+                     </property>
+                    </widget>
                    </item>
                    <item>
-                    <property name="text">
-                     <string/>
-                    </property>
+                    <widget class="QPushButton" name="ptsthsViewBtn">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>显示</string>
+                     </property>
+                    </widget>
                    </item>
-                   <item>
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </item>
-                  </widget>
+                  </layout>
                  </item>
                 </layout>
-               </item>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_9">
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="frame_13">
+                <property name="styleSheet">
+                 <string notr="true">border: 1px solid black;</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_11">
                  <item>
-                  <widget class="QPushButton" name="AvgHsParaGeneBtn">
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="text">
-                    <string>光谱指数一键计算保存</string>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayout_39">
+                   <item>
+                    <widget class="QLabel" name="label_17">
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>整图相关参数</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_17">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="AvgParaDb">
+                     <property name="iconSize">
+                      <size>
+                       <width>20</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>平均值</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>中位数</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="AvgPtsthsParaGeneBtn">
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
-                   </property>
-                   <property name="text">
-                    <string>表型参数一键计算保存</string>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayout_40">
+                   <item>
+                    <widget class="QLabel" name="label_18">
+                     <property name="statusTip">
+                      <string notr="true"/>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">Border:None;</string>
+                     </property>
+                     <property name="text">
+                      <string>机器学习模型</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_18">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="AvgParaModelDb">
+                     <property name="iconSize">
+                      <size>
+                       <width>20</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>PLSR模型</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_9">
+                   <item>
+                    <widget class="QPushButton" name="AvgHsParaGeneBtn">
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>光谱指数一键计算保存</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="AvgPtsthsParaGeneBtn">
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="text">
+                      <string>表型参数一键计算保存</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
-               </item>
-              </layout>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>

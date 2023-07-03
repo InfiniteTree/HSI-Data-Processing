@@ -1,8 +1,7 @@
-import ReadData
 import numpy as np
 from PIL import Image
 
-class preprocess:
+class Preprocess:
     HSI_info = [] # shape = (n, k, m)
     HSI = []
     lines = 0

@@ -10,12 +10,9 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import threading
-
 from MainWindow import Ui_MainWindow
-import ReadData as rd
-import Preprocess as pre
-import GetReflectance as gr
-import Processing as pro
+
+import HSIpack
 
 class Main(QMainWindow, Ui_MainWindow):
     settings = QtCore.QSettings("config.ini",
@@ -134,14 +131,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.impRawBtn.clicked.connect(self.importRaw)
         self.impRawBtn.setGeometry(50, 50, 200, 30)
 
-        # Import the multiples raw HSI files
-        self.impRawsBtn.clicked.connect(self.importRaws)
-
-        # Multiple raw datas generating
-        self.multiRgbGeneBtn.clicked.connect(lambda:self.getRgb("Gene"))
-        self.multiRgbSaveBtn.clicked.connect(lambda:self.getRgb("Save"))
-        self.multiRgbViewBtn.clicked.connect(lambda:self.getRgb("View"))
-
         # Read the raw file
         self.rgbGeneBtn.clicked.connect(lambda:self.getRgb("Gene"))
         # show the raw file
@@ -214,6 +203,14 @@ class Main(QMainWindow, Ui_MainWindow):
         self.AvgHsParaGeneBtn.clicked.connect(lambda: self.outputAvgHsParas("Gene"))
         self.AvgPtsthsParaGeneBtn.clicked.connect(lambda: self.outputAvgPtsthsParas("Gene"))
 
+        # One-click processing for multiples file 
+        # Import the multiples raw HSI files
+        self.impRawsBtn.clicked.connect(self.importRaws)
+
+        # Multiple raw datas generating
+        self.multiGeneBtn.clicked.connect(lambda:self.multipleGene("Gene"))
+        self.multiViewBtn.clicked.connect(lambda:self.multipleView("View"))
+
     ######----------------------------------------------------------------------------------------------------######
     #####-------------------------------------Helper Function start here---------------------------------------#####
     ####--------------------------------------------------------------------------------------------------------####
@@ -227,48 +224,6 @@ class Main(QMainWindow, Ui_MainWindow):
             self.rawHSIPathlineEdit.setText(self.rawSpeFile_path)
             self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
             self.fileNum = 1
-
-    def importRaws(self): 
-        file_dialog = QFileDialog()
-        self.selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
-        if self.selected_directory:
-            rawfile_names = os.listdir(self.selected_directory)
-            rawfile_names = [item.replace("\\","/") for item in rawfile_names if item.endswith(".spe")] # only show the .spe file
-            self.selected_directory = self.selected_directory.replace("\\","/")
-            self.rawfile_paths = [self.selected_directory + "/" + item for item in rawfile_names]
-            self.fileNum = len(rawfile_names)
-        
-        # Bug remain here to do
-        self.rawsLayout = QVBoxLayout(self.rawFilesWidget)
-        self.rawsLayout.setContentsMargins(0, 0, 0, 0)  # Remove any margins
-
-        for i in range(len(self.rawfile_paths)):
-            text = rawfile_names[i]
-            label = QLabel(text)
-            label.setStyleSheet("border: none; font: 12pt 'Times New Roman';")
-            label.setCursor(QtCore.Qt.PointingHandCursor)  # Set cursor to hand when hovering over the label
-            label.mousePressEvent = lambda event, label=label: self.labelClicked(label)  # Connect the label's click event to the function
-            self.rawsLayout.addWidget(label)
-
-        self.rawsLayout.addStretch()  # Add stretchable space at the end
-
-        self.RawFilesScrollArea.setWidgetResizable(True)
-        
-        self.multiFlag = 1
-    
-    def labelClicked(self, label): 
-        self.raw = label.text()
-        self.rawSpeFile_path = self.selected_directory + "/" + self.raw
-        self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
-
-        # Refresh the widget background and Set the label background to the selected color
-        for child in self.rawFilesWidget.children():
-            if isinstance(child, QLabel):
-                child.setStyleSheet("background-color: None; font: 12pt 'Agency FB'; border: None;") 
-                            
-        label.setStyleSheet("background-color: lightblue")
-
-        #self.rawFilesWidget.setStyleSheet("background-color: transparent;")
         
 
     def importBRFImg(self):
@@ -416,7 +371,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def getReflect(self, function):
         match function:        
             case "Gene":
-                self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b, self.plant_mask)
+                self.reflect = HSIpack.gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b, self.plant_mask)
                 self.reflect.getReflect()
                 # Unlock the view and Save function
                 self.RefViewBtn.setEnabled(True)
@@ -434,7 +389,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def RmBg(self, function):
         match function:        
             case "Gene":
-                pre_data = pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
+                pre_data = HSIpack.pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
                 level1 = pre_data.getLevel1()
                 self.HSI_info = level1[0]
                 self.cur_proportion = level1[2]
@@ -449,7 +404,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 QtWidgets.QMessageBox.about(self, "", "去除非植物部分背景成功")
             
             case "Save":
-                l1_rgbimg = rd.drawImg(self.HSI_info)
+                l1_rgbimg = HSIpack.rd.drawImg(self.HSI_info)
                 self.l1_rgbimg_path = "figures/test/pre_process/" + str(self.fileNum) + "_level1.jpg"
                 l1_rgbimg.save(self.l1_rgbimg_path)
                 QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
@@ -477,7 +432,7 @@ class Main(QMainWindow, Ui_MainWindow):
             # To remove the shadow and the bright of the plot
         match function:
             case "Gene":
-                pre_data = pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
+                pre_data = HSIpack.pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
                 level2 = pre_data.getLevel2()
                 self.HSI_info = level2[0]
                 self.cur_proportion = level2[3]
@@ -491,7 +446,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 QtWidgets.QMessageBox.about(self, "", "去除过暗过曝成功")
 
             case "Save":
-                l2_rgbImg = rd.drawImg(self.HSI_info)
+                l2_rgbImg = HSIpack.rd.drawImg(self.HSI_info)
                 self.l2_rgbimg_path = "figures/test/pre_process/" + str(self.fileNum) + "_level2.jpg"
                 l2_rgbImg.save(self.l2_rgbimg_path)
                 QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
@@ -550,7 +505,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                 self.HS_Para = self.hsParaDb.currentText()
-                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
                 self.pro_data.calcHsParas()
 
                 # Unlock the view and Save function
@@ -569,7 +524,7 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
                 count = 0
                 progress_bar = 0
                 for i in range(self.plantPixNum):
@@ -632,7 +587,7 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
                 self.pro_data.exportHsParas("results/test/AvgHsPara.csv", self.fileNum)
                 QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
                 return
@@ -641,10 +596,62 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
                 self.pro_data.exportPhenotypeParas("results/test/AvgPtsthsPara.csv", self.fileNum)
                 QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
                 return
+            
+    # one-cliked processing for multiple files
+    def importRaws(self): 
+        file_dialog = QFileDialog()
+        self.selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
+        if self.selected_directory:
+            rawfile_names = os.listdir(self.selected_directory)
+            rawfile_names = [item.replace("\\","/") for item in rawfile_names if item.endswith(".spe")] # only show the .spe file
+            self.selected_directory = self.selected_directory.replace("\\","/")
+            self.rawfile_paths = [self.selected_directory + "/" + item for item in rawfile_names]
+            self.fileNum = len(rawfile_names)
+        
+        # Bug remain here to do
+        self.rawsLayout = QVBoxLayout(self.rawFilesWidget)
+        self.rawsLayout.setContentsMargins(0, 0, 0, 0)  # Remove any margins
+
+        for i in range(len(self.rawfile_paths)):
+            text = rawfile_names[i]
+            label = QLabel(text)
+            label.setStyleSheet("border: none; font: 12pt 'Times New Roman';")
+            label.setCursor(QtCore.Qt.PointingHandCursor)  # Set cursor to hand when hovering over the label
+            label.mousePressEvent = lambda event, label=label: self.labelClicked(label)  # Connect the label's click event to the function
+            self.rawsLayout.addWidget(label)
+
+        self.rawsLayout.addStretch()  # Add stretchable space at the end
+
+        self.RawFilesScrollArea.setWidgetResizable(True)
+        
+        self.multiFlag = 1
+
+    # Multiple files result generation
+    def multiGene(self):
+        self.rawfile_paths
+    
+    # To show the multiple files result 
+    def multiView(self):
+        return
+    
+
+    def labelClicked(self, label): 
+        self.raw = label.text()
+        self.rawSpeFile_path = self.selected_directory + "/" + self.raw
+        self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
+
+        # Refresh the widget background and Set the label background to the selected color
+        for child in self.rawFilesWidget.children():
+            if isinstance(child, QLabel):
+                child.setStyleSheet("background-color: None; font: 12pt 'Agency FB'; border: None;") 
+                            
+        label.setStyleSheet("background-color: lightblue")
+
+        #self.rawFilesWidget.setStyleSheet("background-color: transparent;")
     # ----------------------------Tab4-----------------------------
 
 class hsiRawView(QGraphicsView):

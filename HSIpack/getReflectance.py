@@ -3,9 +3,6 @@ import matplotlib.pyplot as plt
 import csv
 from scipy.interpolate import interp1d
 
-import ReadData
-import Preprocess
-
 class Reflectance:
     HSI_info = []
     cur_proportion = 1
