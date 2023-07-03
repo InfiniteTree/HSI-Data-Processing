@@ -278,6 +278,8 @@ class Main(QMainWindow, Ui_MainWindow):
             self.BRFSpeFile_path = self.BRFSpeFile_path.replace("\\","/")
             self.BRFPathlineEdit.setText(self.BRFSpeFile_path)            
             self.BRFHdrFile_path = self.BRFSpeFile_path.replace(".spe",".hdr")
+            self.fileNum = 1
+
 
     def RefCali(self):
         self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, [], [], self.plant_mask)

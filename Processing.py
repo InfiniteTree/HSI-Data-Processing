@@ -1,7 +1,9 @@
 import numpy as np
 import warnings
-import math
+import subprocess
 import csv
+import os
+
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.cross_decomposition import PLSRegression
@@ -24,6 +26,7 @@ class process:
     waveStart = 0
 
     FirstRow = []  # The first row to write
+    pls = None # the PLSR model
 
     ### Need to remap the band intelligently
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
@@ -43,6 +46,21 @@ class process:
         self.waveStart = int(float(self.Reflect_Info[4][0]))
         self.plant_mask = plant_mask
         self.ParaMatrix = np.zeros((self.lines, self.samples))
+
+        # Train the model
+        data = pd.read_csv("model/LearningData/TrainData.csv")
+        #print("Dataset of Train Model loaded...")
+        train_x = data.drop(['SPAD',"A1200", "N", "Ca", "Cb"],axis=1)
+        #train_y = data[['SPAD',"A1200", "N", "Ca", "Cb"]].copy()
+        train_y = data[[self.phenotypePara]]
+        train_x = pd.DataFrame(train_x, dtype='float32')
+        train_y = pd.DataFrame(train_y, dtype='float32')
+        # pls_param_grid = {'n_components': list(range(10,20))}
+        # Train the data
+        pls_param_grid = {'n_components':[10]}  
+        warnings.filterwarnings('ignore', category=UserWarning)
+        self.pls = GridSearchCV(PLSRegression(), param_grid=pls_param_grid,scoring='r2',cv=10)
+        self.pls.fit(train_x, train_y)
     
     # Calculate the relative values the photosynthesis by the design formulas
     def calcHsParas(self):
@@ -243,7 +261,7 @@ class process:
                         ax.set_title("Pseudo_Color Map of the Relative Values on PRI", y=1.05)
                     case "MTVI2":
                         im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
-                        ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
+                        ax.set_title("Pseudo_Color Map of the Relative Values on SPAD", y=1.05)
 
                     case "SR":
                         im = ax.imshow(cropped_image, cmap='gray',interpolation='nearest')
@@ -297,28 +315,11 @@ class process:
         # Fault Value Detection
             # Get the remaining parameters by using the trained model to predict
             if self.phenotypeParaModel == "PLSR":
-                data = pd.read_csv("model/LearningData/TrainData.csv")
-                #print("Dataset of Train Model loaded...")
-                train_x = data.drop(['SPAD',"A1200", "N", "Ca", "Cb"],axis=1)
-                #train_y = data[['SPAD',"A1200", "N", "Ca", "Cb"]].copy()
-                train_y = data[[self.phenotypePara]]
-
-                train_x = pd.DataFrame(train_x, dtype='float32')
-                train_y = pd.DataFrame(train_y, dtype='float32')
-
-                # pls_param_grid = {'n_components': list(range(10,20))}
-                # Train the data
-                pls_param_grid = {'n_components':[10]}  
-
-                warnings.filterwarnings('ignore', category=UserWarning)
-                pls = GridSearchCV(PLSRegression(), param_grid=pls_param_grid,scoring='r2',cv=10)
-                pls.fit(train_x, train_y)
-
                 # test_x stores the raw data for one pixel; y_pre stores the dealt results for all pixels
                 test_x = self.ReflectMatrix[index//self.samples,6:-16,index%self.samples] # The data set of the train model only contains HS in parts of wavelength range
                 test_x = pd.Series(test_x, dtype='float32')
                 test_x = test_x.to_frame().T
-                self.ParaMatrix[index//self.samples, index%self.samples] = pls.predict(test_x)
+                self.ParaMatrix[index//self.samples, index%self.samples] = self.pls.predict(test_x)
 
     # export file 1 to store the spectra data  
     def HyperspectraCurve(self, HSI_info, proportion):
@@ -339,7 +340,6 @@ class process:
         plt.plot(x,y,c='lightcoral',label='Curve_poly_Fit')
         plt.savefig("Results/Hyperspec_curve.jpg")
         remainRow = spec_mean
-            
         #plt.show()
 
         # Export the data of hyperspectra curve into the local .csv
@@ -360,12 +360,14 @@ class process:
         # if self.hsPara not in self.FirstRow:
         # Export the results
 
+        csv_folder = os.path.dirname(os.path.abspath(filename))
+
         with open(filename,"w",newline='') as f:
             writer = csv.writer(f)
             writer.writerow(FirstRow)
             for i in range(fileNum):
                 meanHsPara = [] # initialize
-                meanHsPara.append[i]
+                meanHsPara.append(i+1)
                 for j in range(len(FirstRow)-1):
                     self.hsPara = FirstRow[j+1]
                     self.calcHsParas()
@@ -373,9 +375,11 @@ class process:
                     meanHsPara.append(np.mean(non_zero_matrix)) # bugs remain here
                 writer.writerow(meanHsPara)
 
+        subprocess.run(['start', '', csv_folder], shell=True)
+
     def exportPhenotypeParas(self, filename, fileNum):
+        csv_folder = os.path.dirname(os.path.abspath(filename))
         FirstRow = ["PlotIdx","SPAD", "A1200", "N", "Ca", "Cb"]
-        
         # if self.hsPara not in self.FirstRow:
         # Export the results
         with open(filename,"w",newline='') as f:
@@ -383,8 +387,8 @@ class process:
             writer.writerow(FirstRow)
             for i in range(fileNum):
                 dataRow = [] # initialize
-                dataRow.append[i]
-                for j in range(len(FirstRow)):
+                dataRow.append(i+1)
+                for j in range(len(FirstRow))-1:
                     if self.phenotypeParaModel == "PLSR":
                         data = pd.read_csv("model/LearningData/TrainData.csv")
                         #print("Dataset of Train Model loaded...")
@@ -402,14 +406,11 @@ class process:
                             case 4:
                                 self.phenotypePara = "Cb"
                         train_y = data[[self.phenotypePara]]
-
                         train_x = pd.DataFrame(train_x, dtype='float32')
                         train_y = pd.DataFrame(train_y, dtype='float32')
-
                         # pls_param_grid = {'n_components': list(range(10,20))}
                         # Train the data
                         pls_param_grid = {'n_components':[10]}  
-
                         warnings.filterwarnings('ignore', category=UserWarning)
                         pls = GridSearchCV(PLSRegression(), param_grid=pls_param_grid,scoring='r2',cv=10)
                         pls.fit(train_x, train_y)
@@ -426,6 +427,8 @@ class process:
                         predict_y = pls.predict(test_x)
                         dataRow.append(predict_y[0][0])
                 writer.writerow(dataRow)
+        
+        subprocess.run(['start', '', csv_folder], shell=True)
 
 
 

@@ -14,7 +14,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1432, 861)
+        MainWindow.setWindowModality(QtCore.Qt.NonModal)
+        MainWindow.resize(1368, 834)
+        MainWindow.setWindowTitle("高光谱数据分析")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("../MilletHill/logo/公司logo图片/MH.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
+        MainWindow.setIconSize(QtCore.QSize(30, 70))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -59,7 +65,7 @@ class Ui_MainWindow(object):
         self.RawFilesScrollArea.setWidgetResizable(True)
         self.RawFilesScrollArea.setObjectName("RawFilesScrollArea")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 232, 728))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 200, 701))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.verticalLayout_19 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_19.setObjectName("verticalLayout_19")
@@ -341,7 +347,7 @@ class Ui_MainWindow(object):
         self.WaveScrollArea.setWidgetResizable(True)
         self.WaveScrollArea.setObjectName("WaveScrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 358, 136))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 358, 109))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.horizontalLayout_22 = QtWidgets.QHBoxLayout(self.scrollAreaWidgetContents)
         self.horizontalLayout_22.setObjectName("horizontalLayout_22")
@@ -771,12 +777,11 @@ class Ui_MainWindow(object):
         self.actionSave.setObjectName("actionSave")
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.tabWidget.setToolTip(_translate("MainWindow", "<html><head/><body><p>1</p></body></html>"))
         self.impRawsBtn.setText(_translate("MainWindow", "导入多张"))
         self.multiRgbGeneBtn.setText(_translate("MainWindow", "处理"))
