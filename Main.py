@@ -23,7 +23,11 @@ class Main(QMainWindow, Ui_MainWindow):
     ####--------------------------------------------------------------------------------------------------------####
     # ------------------------------------Tab1------------------------------------
     fileNum = 0
+    fileName = "" # The filename of the HSI
+    selected_directory = "" # The abs path of the raw spe file directory
     # in Windows: C:\...\... while in linux C:/.../...
+    
+    # Single file
     rawSpeFile_path = "" # The abs path of the raw spe file
     rawHdrFile_path = "" # The abs path of the raw hdr file
     rawsSpeFile_path = "" # The abs path of the raw spe files
@@ -31,10 +35,9 @@ class Main(QMainWindow, Ui_MainWindow):
     BRFSpeFile_path = "" # The abs path of the reference board spe file
     BRFHdrFile_path = "" # The abs path of the reference board hdr file
 
-    selected_directory = "" # The abs path of the raw spe file directory
+    # Multiple files
     rawfile_paths = "" # The abs path of the raw spe files with batch processing
     multiFlag = 0 # multiple files flag: 0 indicates not multiple while 1 indicates multiple
-
 
     # Data recording for selection rectangular
     raw_scene = None
@@ -97,6 +100,9 @@ class Main(QMainWindow, Ui_MainWindow):
     Ptsths_Para_Model = ""
 
     pro_data = None
+
+    Hs_Para_list = ["NDVI","OSAVI", "PSSRa","PSSRb", "PRI","MTVI2","SR", "DVI", "SIPI", "PSRI", "CRI1", "CRI2", "ARI1", "ARI2", "WBI"]
+    Ptsths_Para_list = ["SPAD","A1200", "N", "Ca", "Cb"]
 
     ###-------------------------------------------The End line---------------------------------------------------###
 
@@ -200,16 +206,16 @@ class Main(QMainWindow, Ui_MainWindow):
         self.ptsthsSaveBtn.clicked.connect(lambda: self.getPtsthsPara("Save"))
         self.ptsthsViewBtn.clicked.connect(lambda: self.getPtsthsPara("View"))
 
-        self.AvgHsParaGeneBtn.clicked.connect(lambda: self.outputAvgHsParas("Gene"))
-        self.AvgPtsthsParaGeneBtn.clicked.connect(lambda: self.outputAvgPtsthsParas("Gene"))
+        self.AvgHsParaGeneBtn.clicked.connect(lambda: self.outputAvgHsParas("Gene"), 1)
+        self.AvgPtsthsParaGeneBtn.clicked.connect(lambda: self.outputAvgPtsthsParas("Gene"), 1)
 
         # One-click processing for multiples file 
         # Import the multiples raw HSI files
         self.impRawsBtn.clicked.connect(self.importRaws)
 
         # Multiple raw datas generating
-        self.multiGeneBtn.clicked.connect(lambda:self.multipleGene("Gene"))
-        self.multiViewBtn.clicked.connect(lambda:self.multipleView("View"))
+        self.multiGeneBtn.clicked.connect(lambda:self.multiProcess("Gene"))
+        self.multiViewBtn.clicked.connect(lambda:self.multiProcess("View"))
 
     ######----------------------------------------------------------------------------------------------------######
     #####-------------------------------------Helper Function start here---------------------------------------#####
@@ -225,7 +231,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
             self.fileNum = 1
         
-
+    # import the image that contains the Reference Board
     def importBRFImg(self):
         selected_file, _ = QFileDialog.getOpenFileName(QMainWindow(), '选择文件', '', '.spe(*.spe*)')
         if selected_file:
@@ -235,9 +241,20 @@ class Main(QMainWindow, Ui_MainWindow):
             self.BRFHdrFile_path = self.BRFSpeFile_path.replace(".spe",".hdr")
             self.fileNum = 1
 
+    # import the amplititude along diferent wavelengths of 3% and 30% BRF
+    def importRftCaliFile(self):
+        file_dialog = QFileDialog()
+        self.selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
+        if self.selected_directory:
+            BRFfile_names = os.listdir(self.selected_directory)
+            BRFfile_names = [item.replace("\\","/") for item in BRFfile_names]
+            self.selected_directory = self.selected_directory.replace("\\","/")
+            self.BRFCaliPathlineEdit.setText(self.selected_directory)
+            
+            self.BRFfile_paths = [self.selected_directory + "/" + item for item in BRFfile_names]
 
     def RefCali(self):
-        self.reflect = gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, [], [], self.plant_mask)
+        self.reflect = HSIpack.gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, [], [], self.plant_mask, self.fileName)
         # Get the k and b
         self.k, self.b = self.reflect.getReflectEquation()
         # Unlock the view and Save function
@@ -246,31 +263,33 @@ class Main(QMainWindow, Ui_MainWindow):
     def getRgb(self, function):
         match function:
             case "Gene":
-                self.HSI_info = rd.ReadData(self.rawHdrFile_path,self.rawSpeFile_path, 1)
+                self.HSI_info = HSIpack.rd.ReadData(self.rawHdrFile_path,self.rawSpeFile_path, 1)
                 self.HSI_lines = self.HSI_info[0]
                 self.HSI_channels = self.HSI_info[1]
                 self.HSI_samples = self.HSI_info[2]
                 self.HSI = self.HSI_info[3]
                 self.HSI_wavelengths = self.HSI_info[4]
+                self.plant_mask = np.zeros((self.HSI_lines, self.HSI_samples), dtype=bool)
                 # Unlock the view and Save function
-                if self.multiFlag == 0:
+                if self.fileNum == 1:
                     self.rgbSaveBtn.setEnabled(True)
                     self.rgbViewBtn.setEnabled(True)
-                elif self.multiFlag == 1:
-                    self.multiRgbSaveBtn.setEnabled(True)
-                    self.multiRgbViewBtn.setEnabled(True)
-                self.showHsiInfoBtn.setEnabled(True)
-                QtWidgets.QMessageBox.about(self, "", "高光谱原始数据处理成功")
+                    self.showHsiInfoBtn.setEnabled(True)
+                    QtWidgets.QMessageBox.about(self, "", "高光谱原始数据处理成功")
+                elif self.fileNum > 1:
+                    self.multiViewBtn.setEnabled(True)
+                    
             
             case "Save":
                 if self.rawSpeFile_path != "":
-                    self.rgbImg = rd.drawImg(self.HSI_info)
-                    self.rgbImg.save("figures/test/raw" + str(self.fileNum) + ".jpg")
-                    QtWidgets.QMessageBox.about(self, "", "高光谱可视化数据保存成功")
+                    self.rgbImg = HSIpack.rd.drawImg(self.HSI_info)
+                    self.rgbImg.save("Outputs/figures/" + self.fileName + "/raw.jpg")
+                    if self.fileNum == 1:
+                        QtWidgets.QMessageBox.about(self, "", "高光谱可视化数据保存成功")
 
             case "View":
                 if self.rawSpeFile_path != "":                     
-                    self.rawjpgFile_path = "figures/test/raw" + str(self.fileNum) + ".jpg"
+                    self.rawjpgFile_path = "Outputs/figures/" + self.fileName + "/raw.jpg"
                     frame = QImage(self.rawjpgFile_path)
                     pix = QPixmap.fromImage(frame)
                     item = QGraphicsPixmapItem(pix)
@@ -285,7 +304,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def getBRFRgb(self, function):
         match function:
             case "Gene":
-                self.HSI_info = rd.ReadData(self.BRFHdrFile_path,self.BRFSpeFile_path, 1)
+                self.HSI_info = HSIpack.rd.ReadData(self.BRFHdrFile_path,self.BRFSpeFile_path, 1)
                 self.HSI_lines = self.HSI_info[0]
                 self.HSI_channels = self.HSI_info[1]
                 self.HSI_samples = self.HSI_info[2]
@@ -297,18 +316,27 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.BRFRawSaveBtn.setEnabled(True)
 
                 self.showHsiInfoBtn.setEnabled(True)
-
-                QtWidgets.QMessageBox.about(self, "", "高光谱反射板处理成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "高光谱反射板处理成功")
 
             case "Save":
                 if self.BRFSpeFile_path != "":
-                    self.rgbImg = rd.drawImg(self.HSI_info)
-                    self.rgbImg.save("figures/test/raw" + str(self.fileNum) + ".jpg")
-                    QtWidgets.QMessageBox.about(self, "", "高光谱反射板可视化保存成功")
+                    self.rgbImg = HSIpack.rd.drawImg(self.HSI_info)
+                    index1 = self.BRFSpeFile_path.rfind("/")  
+                    index2 = self.BRFSpeFile_path.find(".", index1)
+                    self.fileName = self.BRFSpeFile_path[index1+1: index2]
+                    # Handle multiple files saving
+                    if not os.path.exists("Outputs/figures/BRF"):
+                        os.makedirs("Outputs/figures/BRF")
+                    if not os.path.exists("Outputs/results/BRF"):
+                        os.makedirs("Outputs/results/BRF")
+                    self.rgbImg.save("Outputs/figures/BRF/rawBRF.jpg")
+                    if self.fileNum == 1:
+                        QtWidgets.QMessageBox.about(self, "", "高光谱反射板可视化保存成功")
 
             case "View":
                 if self.BRFSpeFile_path != "":                     
-                    self.rawjpgFile_path = "figures/test/raw" + str(self.fileNum) + ".jpg"
+                    self.rawjpgFile_path = "Outputs/figures/BRF/rawBRF.jpg"
                     frame = QImage(self.rawjpgFile_path)
                     pix = QPixmap.fromImage(frame)
                     item = QGraphicsPixmapItem(pix)
@@ -334,8 +362,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.view.show()
         self.view.resize(600, 800)
         #self.view.startSelection()
-
-        
+       
     def showHsiInfo(self):
         self.lenShowBtn.setText(str(self.HSI_lines)+" pix")
         self.widthShowBtn.setText(str(self.HSI_samples)+" pix")
@@ -368,28 +395,11 @@ class Main(QMainWindow, Ui_MainWindow):
             case 4:
                 self.ampl_HighTH = int(combo_box.currentText())
     
-    def getReflect(self, function):
-        match function:        
-            case "Gene":
-                self.reflect = HSIpack.gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b, self.plant_mask)
-                self.reflect.getReflect()
-                # Unlock the view and Save function
-                self.RefViewBtn.setEnabled(True)
-                self.RefSaveBtn.setEnabled(True)
-                self.RFCurveBtn.setEnabled(True)
-                QtWidgets.QMessageBox.about(self, "", "反射率校准处理成功")
-           
-            case "Save":
-                self.reflect.visualizeReflect(1)
-                QtWidgets.QMessageBox.about(self, "", "植物平均反射率曲线保存成功")
-            
-            case "View":
-                self.reflect.visualizeReflect(0)
     # Remove the background by NDVI
     def RmBg(self, function):
         match function:        
             case "Gene":
-                pre_data = HSIpack.pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
+                pre_data = HSIpack.pre.Preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
                 level1 = pre_data.getLevel1()
                 self.HSI_info = level1[0]
                 self.cur_proportion = level1[2]
@@ -401,13 +411,15 @@ class Main(QMainWindow, Ui_MainWindow):
                 # Unlock the view and Save function
                 self.RmBgViewBtn.setEnabled(True)
                 self.RmBgSaveBtn.setEnabled(True)
-                QtWidgets.QMessageBox.about(self, "", "去除非植物部分背景成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "去除非植物部分背景成功")
             
             case "Save":
                 l1_rgbimg = HSIpack.rd.drawImg(self.HSI_info)
-                self.l1_rgbimg_path = "figures/test/pre_process/" + str(self.fileNum) + "_level1.jpg"
+                self.l1_rgbimg_path = "Outputs/figures/test/pre_process/" + str(self.fileNum) + "_level1.jpg"
                 l1_rgbimg.save(self.l1_rgbimg_path)
-                QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
                 
             case "View":
                 frame = QImage(self.l1_rgbimg_path)
@@ -432,7 +444,7 @@ class Main(QMainWindow, Ui_MainWindow):
             # To remove the shadow and the bright of the plot
         match function:
             case "Gene":
-                pre_data = HSIpack.pre.preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
+                pre_data = HSIpack.pre.Preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
                 level2 = pre_data.getLevel2()
                 self.HSI_info = level2[0]
                 self.cur_proportion = level2[3]
@@ -443,13 +455,15 @@ class Main(QMainWindow, Ui_MainWindow):
                 # Unlock the view and Save function
                 self.RmDbViewBtn.setEnabled(True)
                 self.RmDbSaveBtn.setEnabled(True)
-                QtWidgets.QMessageBox.about(self, "", "去除过暗过曝成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "去除过暗过曝成功")
 
             case "Save":
                 l2_rgbImg = HSIpack.rd.drawImg(self.HSI_info)
-                self.l2_rgbimg_path = "figures/test/pre_process/" + str(self.fileNum) + "_level2.jpg"
+                self.l2_rgbimg_path = "Outputs/figures/test/pre_process/" + str(self.fileNum) + "_level2.jpg"
                 l2_rgbImg.save(self.l2_rgbimg_path)
-                QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
 
             case "View":
                 frame = QImage(self.l2_rgbimg_path)
@@ -459,20 +473,28 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.dealt_scene = QGraphicsScene()
                 self.dealt_scene.addItem(item)
                 self.hsidealtView.setScene(self.dealt_scene)
-                
-    # import the amplititude along diferent wavelengths of 3% and 30% BRF
-    def importRftCaliFile(self):
-        file_dialog = QFileDialog()
-        self.selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
-        if self.selected_directory:
-            BRFfile_names = os.listdir(self.selected_directory)
-            BRFfile_names = [item.replace("\\","/") for item in BRFfile_names]
-            self.selected_directory = self.selected_directory.replace("\\","/")
-            self.BRFCaliPathlineEdit.setText(self.selected_directory)
+    
+    # Calculate the reflectance
+    def getReflect(self, function):
+        match function:        
+            case "Gene":
+                self.reflect = HSIpack.gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b, self.plant_mask, self.fileName)
+                self.reflect.getReflect()
+                # Unlock the view and Save function
+                self.RefViewBtn.setEnabled(True)
+                self.RefSaveBtn.setEnabled(True)
+                self.RFCurveBtn.setEnabled(True)
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "反射率校准处理成功")
+           
+            case "Save":
+                self.reflect.visualizeReflect(1)
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "植物平均反射率曲线保存成功")
             
-            self.BRFfile_paths = [self.selected_directory + "/" + item for item in BRFfile_names]
+            case "View":
+                self.reflect.visualizeReflect(0)
 
-            
     def HSCurveView(self):
         self.view = HSCurve(self.raw_scene)
         self.view.show()
@@ -480,7 +502,6 @@ class Main(QMainWindow, Ui_MainWindow):
     def RFCurveView(self):
         self.view = RFCurve(self.raw_scene)
         self.view.show()
-
 
     # ----------------------------Tab3-----------------------------
     def getProcessPara(self, index):
@@ -502,20 +523,21 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.reflect.ReflectMatrix[~self.plant_mask,:] = 0
                 self.reflect.ReflectMatrix = np.transpose(self.reflect.ReflectMatrix, (0, 2, 1))
                 '''
-
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                 self.HS_Para = self.hsParaDb.currentText()
-                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
                 self.pro_data.calcHsParas()
 
                 # Unlock the view and Save function
                 self.hsParaSaveBtn.setEnabled(True)
                 self.hsParaViewBtn.setEnabled(True)
-                QtWidgets.QMessageBox.about(self, "", "光谱指数计算成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "光谱指数计算成功")
 
             case "Save":
                 self.pro_data.draw_pseudoColorImg("Save", 1)
-                QtWidgets.QMessageBox.about(self, "", "光谱指数计算结果保存成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "光谱指数计算结果保存成功")
 
             case "View":
                 self.pro_data.draw_pseudoColorImg("View", 1)
@@ -524,7 +546,7 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
+                self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
                 count = 0
                 progress_bar = 0
                 for i in range(self.plantPixNum):
@@ -536,7 +558,8 @@ class Main(QMainWindow, Ui_MainWindow):
                         print(progress_bar)
                 self.ptsthsSaveBtn.setEnabled(True)
                 self.ptsthsViewBtn.setEnabled(True)
-                QtWidgets.QMessageBox.about(self, "", "光合表型参数计算成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "光合表型参数计算成功")
 
                 '''
                 self.progress_bar = QProgressBar(self)
@@ -551,7 +574,8 @@ class Main(QMainWindow, Ui_MainWindow):
 
             case "Save":
                 self.pro_data.draw_pseudoColorImg("Save", 2)
-                QtWidgets.QMessageBox.about(self, "", "光合表型参数计算结果保存成功")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "光合表型参数计算结果保存成功")
 
             case "View":
                 self.pro_data.draw_pseudoColorImg("View", 2)
@@ -583,24 +607,24 @@ class Main(QMainWindow, Ui_MainWindow):
         event.accept()
     '''
 
-    def outputAvgHsParas(self, function):
+    def outputAvgHsParas(self, function, idx):
         match function:
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
-                self.pro_data.exportHsParas("results/test/AvgHsPara.csv", self.fileNum)
-                QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
-                return
+                self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
+                self.pro_data.exportHsParas("Outputs/results/" + self.fileName + "/AvgHsPara.csv", idx)
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
 
-    def outputAvgPtsthsParas(self, function):
+    def outputAvgPtsthsParas(self, function, idx):
         match function:
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = HSIpack.pro.process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask)
-                self.pro_data.exportPhenotypeParas("results/test/AvgPtsthsPara.csv", self.fileNum)
-                QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
-                return
-            
+                self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
+                self.pro_data.exportPhenotypeParas("Outputs/results/" + self.fileName + "/AvgPtsthsPara.csv", idx)
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
+
     # one-cliked processing for multiple files
     def importRaws(self): 
         file_dialog = QFileDialog()
@@ -630,14 +654,65 @@ class Main(QMainWindow, Ui_MainWindow):
         
         self.multiFlag = 1
 
-    # Multiple files result generation
-    def multiGene(self):
-        self.rawfile_paths
-    
-    # To show the multiple files result 
-    def multiView(self):
-        return
-    
+    #Multiple files processing
+    def multiProcess(self, function):
+        match function:
+            # Multiple files result generation
+            case "Gene":
+                for i in range(len(self.rawfile_paths)):
+                    # get the raw data
+                    self.rawSpeFile_path = self.rawfile_paths[i]
+                    self.rawSpeFile_path = self.rawSpeFile_path.replace("\\","/")
+                    self.rawHSIPathlineEdit.setText(self.rawSpeFile_path)
+                    self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
+
+                    # get the file name
+                    index1 = self.rawSpeFile_path.rfind("/")  
+                    index2 = self.rawSpeFile_path.find(".", index1)
+                    self.fileName = self.rawSpeFile_path[index1+1: index2]
+                    # Make a new directory for each HSI and handle multiple files saving
+                    if not os.path.exists("Outputs/figures/"+ self.fileName):
+                        os.makedirs("Outputs/figures/"+ self.fileName)
+                    if not os.path.exists("Outputs/results/" + self.fileName):
+                        os.makedirs("Outputs/results/" + self.fileName)
+                    
+                    self.getRgb("Gene")
+                    self.getRgb("Save")
+
+                    # get the preprocessed data
+                    if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
+                        os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
+                    self.RmDb("Gene")
+                    self.RmBg("Gene")
+                    self.getReflect("Gene")
+
+                    # get the processed data
+                    if not os.path.exists("Outputs/figures/" + self.fileName + "/process"):
+                        os.makedirs("Outputs/figures/" + self.fileName + "/process")
+                    
+                    # Output the figure
+                    '''
+                    for j in range(len(self.Hs_Para_list)):
+                        self.Hs_Para = self.Hs_Para_list[j]
+                        self.getHsPara("Gene")
+                        self.getHsPara("Save")
+
+                    for j in range(len(self.Ptsths_Para_list)):
+                        self.Ptsths_Para = self.Ptsths_Para_list[j]
+                        self.getPtsthsPara("Gene")
+                        self.getPtsthsPara("Save")
+                    '''
+
+                    # Output the result
+                    self.outputAvgPtsthsParas("Gene", i)
+                    self.outputAvgHsParas("Gene", i)
+
+                    QtWidgets.QMessageBox.about(self, "", "一键完成")
+
+            # To show the multiple files result 
+            case "View":
+                return
+
 
     def labelClicked(self, label): 
         self.raw = label.text()
@@ -782,7 +857,6 @@ class HSCurve(QGraphicsView):
     def closeEvent(self, event):
         self.crosshair_item.setPath(QPainterPath())
     
-
 
 class RFCurve(QGraphicsView):
     def __init__(self, scene):

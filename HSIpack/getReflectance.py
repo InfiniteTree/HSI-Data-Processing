@@ -13,8 +13,9 @@ class Reflectance:
     k = [] # i.e. 300 k for 300 bands
     b = [] # i.e. 300 b for 300 bands
     plantMask = []
+    BRFfilename = "BRF"
     
-    def __init__(self, HSI_info, cur_proportion, BRF_positionRange, brf_files, k, b, plant_mask):
+    def __init__(self, HSI_info, cur_proportion, BRF_positionRange, brf_files, k, b, plant_mask, filename):
         self.HSI_info = HSI_info
         #print(self.HSI_info)
         self.cur_proportion = cur_proportion
@@ -23,6 +24,7 @@ class Reflectance:
         self.k = k
         self.b = b
         self.plantMask = plant_mask
+        self.fileName = filename
         #print(self.BRF_positionRange)
 
 
@@ -110,7 +112,7 @@ class Reflectance:
         self.getRefBoard()
 
         channels = self.HSI_info[1]
-        RefAmplititudes_file ="results/test/RefAmplititudes.csv"
+        RefAmplititudes_file ="Outputs/results/BRF/RefAmplititudes.csv"
         #print("------------3Ref----------")
 
         if self.BRF_files[0][-6:] == "30.csv":
@@ -211,7 +213,7 @@ class Reflectance:
         three_RefAmplititudes = self.getReferAmplititudes("3")
         #"------------For the 30% Ref Board------------")
         thirty_RefAmplititudes = self.getReferAmplititudes("30")
-        RefAmplititudes_file ="results/test/RefAmplititudes.csv"
+        RefAmplititudes_file ="Outputs/results/BRF/RefAmplititudes.csv"
         self.writeRef(RefAmplititudes_file, wavelengths, three_RefAmplititudes, thirty_RefAmplititudes)
 
     def getLeafAvgReflect(self):
@@ -225,7 +227,8 @@ class Reflectance:
         wavelengths = self.HSI_info[4][2:-22]
         FirstRow = wavelengths
         ReflectRow = self.AVG_reflect[2:-22]
-        with open("results/test/ReflectCurve.csv","w",newline='') as f:
+        
+        with open("Outputs/results/" + self.fileName + "/ReflectCurve.csv","w",newline='') as f:
             writer = csv.writer(f)
             # Write the first row
             writer.writerow(FirstRow)
@@ -242,7 +245,7 @@ class Reflectance:
         #plt.xticks(range(400, 1000, 100))
         plt.title("The Reflectance curve of the whole plot")
         if saveFlag ==1:
-            plt.savefig("results/test/Reflectance_curve_new.jpg")
+            plt.savefig("Outputs/figures/" + self.fileName +"/Reflectance_curve_new.jpg")
         elif saveFlag ==0:
             plt.show()
 

@@ -10,7 +10,7 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import GridSearchCV
 #from sklearn.model_selection import train_test_split
 
-class process:
+class Process:
     Reflect_Info = []
     hsPara = ""
     phenotypePara = ""
@@ -28,11 +28,13 @@ class process:
     FirstRow = []  # The first row to write
     pls = None # the PLSR model
 
+    filename = ""
+
     ### Need to remap the band intelligently
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
     map_band = {"band430":16, "band445":22, "band500":47, "band510":51,"band531":62, "band550":70, "band570":80, "band635":110, "band670":126, "band680":131, "band700":139, "band705":143, "band750":164,"band780":178, "band800":188, "band900":235,"band970":268}
     
-    def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType, plant_mask):
+    def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType, plant_mask, filename):
         self.Reflect_Info = reflectInfo
         self.hsPara = hsParaType
         self.phenotypePara = phenotypeParaType
@@ -46,6 +48,7 @@ class process:
         self.waveStart = int(float(self.Reflect_Info[4][0]))
         self.plant_mask = plant_mask
         self.ParaMatrix = np.zeros((self.lines, self.samples))
+        self.filename = filename
 
         # Train the model
         data = pd.read_csv("model/LearningData/TrainData.csv")
@@ -293,7 +296,7 @@ class process:
 
                 cbar = fig.colorbar(im)
                 if op_flag == "Save": 
-                    plt.savefig("figures/test/process/" + self.hsPara + ".jpg")
+                    plt.savefig("Outputs/figures/" + self.filename + "/process/" + self.hsPara + ".jpg")
                     plt.close()
 
                 if op_flag == "View": # Consider to just load the figure here!!!!!!!!!
@@ -304,7 +307,7 @@ class process:
                 ax.set_title("Pseudo_Color Map of the Relative Values on SPAD", y=1.05)
                 cbar = fig.colorbar(im)
                 if op_flag == "Save": 
-                    plt.savefig("figures/test/process/" + self.phenotypePara + ".jpg")
+                    plt.savefig("Outputs/figures/" + self.filename + "/process/" + self.phenotypePara + ".jpg")
                     plt.close()
 
                 if op_flag == "View": # Consider to just load the figure here!!!!!!!!!
@@ -355,80 +358,75 @@ class process:
         return curveFile
 
     # export file to store the Parameters of Phenotype in terms of the single plot
-    def exportHsParas(self, filename,fileNum):
+    def exportHsParas(self, filename,idx):
         FirstRow = ["photoIdx","NDVI","OSAVI", "PSSRa","PSSRb", "PRI","MTVI2","SR", "DVI", "SIPI", "PSRI", "CRI1", "CRI2", "ARI1", "ARI2", "WBI"]
         # if self.hsPara not in self.FirstRow:
         # Export the results
-
-        csv_folder = os.path.dirname(os.path.abspath(filename))
-
-        with open(filename,"w",newline='') as f:
+        # csv_folder = os.path.dirname(os.path.abspath(filename))
+        with open(filename,"a",newline='') as f:
             writer = csv.writer(f)
             writer.writerow(FirstRow)
-            for i in range(fileNum):
-                meanHsPara = [] # initialize
-                meanHsPara.append(i+1)
-                for j in range(len(FirstRow)-1):
-                    self.hsPara = FirstRow[j+1]
-                    self.calcHsParas()
-                    non_zero_matrix = self.ParaMatrix[self.ParaMatrix != 0]
-                    meanHsPara.append(np.mean(non_zero_matrix)) # bugs remain here
-                writer.writerow(meanHsPara)
+            meanHsPara = [] # initialize
+            meanHsPara.append(idx+1)
+            for j in range(len(FirstRow)-1):
+                self.hsPara = FirstRow[j+1]
+                self.calcHsParas()
+                non_zero_matrix = self.ParaMatrix[self.ParaMatrix != 0]
+                meanHsPara.append(np.mean(non_zero_matrix)) # bugs remain here
+            writer.writerow(meanHsPara)
+        # subprocess.run(['start', '', csv_folder], shell=True)
 
-        subprocess.run(['start', '', csv_folder], shell=True)
-
-    def exportPhenotypeParas(self, filename, fileNum):
-        csv_folder = os.path.dirname(os.path.abspath(filename))
+    def exportPhenotypeParas(self, filename, idx):
         FirstRow = ["PlotIdx","SPAD", "A1200", "N", "Ca", "Cb"]
         # if self.hsPara not in self.FirstRow:
         # Export the results
-        with open(filename,"w",newline='') as f:
+        # csv_folder = os.path.dirname(os.path.abspath(filename))
+        with open(filename,"a",newline='') as f:
             writer = csv.writer(f)
             writer.writerow(FirstRow)
-            for i in range(fileNum):
-                dataRow = [] # initialize
-                dataRow.append(i+1)
-                for j in range(len(FirstRow))-1:
-                    if self.phenotypeParaModel == "PLSR":
-                        data = pd.read_csv("model/LearningData/TrainData.csv")
-                        #print("Dataset of Train Model loaded...")
-                        train_x = data.drop(['SPAD',"A1200", "N", "Ca", "Cb"],axis=1)
-                        #train_y = data[['SPAD',"A1200", "N", "Ca", "Cb"]].copy()
-                        match j:
-                            case 0:
-                                self.phenotypePara = "SPAD"
-                            case 1:
-                                self.phenotypePara = "A1200"
-                            case 2:
-                                self.phenotypePara = "N"
-                            case 3:
-                                self.phenotypePara = "Ca"
-                            case 4:
-                                self.phenotypePara = "Cb"
-                        train_y = data[[self.phenotypePara]]
-                        train_x = pd.DataFrame(train_x, dtype='float32')
-                        train_y = pd.DataFrame(train_y, dtype='float32')
-                        # pls_param_grid = {'n_components': list(range(10,20))}
-                        # Train the data
-                        pls_param_grid = {'n_components':[10]}  
-                        warnings.filterwarnings('ignore', category=UserWarning)
-                        pls = GridSearchCV(PLSRegression(), param_grid=pls_param_grid,scoring='r2',cv=10)
-                        pls.fit(train_x, train_y)
+            dataRow = [] # initialize
+            dataRow.append(idx)
+            for j in range(len(FirstRow)-1):
+                if self.phenotypeParaModel == "PLSR":
+                    data = pd.read_csv("model/LearningData/TrainData.csv")
+                    #print("Dataset of Train Model loaded...")
+                    train_x = data.drop(['SPAD',"A1200", "N", "Ca", "Cb"],axis=1)
+                    #train_y = data[['SPAD',"A1200", "N", "Ca", "Cb"]].copy()
+                    match j:
+                        case 0:
+                            self.phenotypePara = "SPAD"
+                        case 1:
+                            self.phenotypePara = "A1200"
+                        case 2:
+                            self.phenotypePara = "N"
+                        case 3:
+                            self.phenotypePara = "Ca"
+                        case 4:
+                            self.phenotypePara = "Cb"
+                    train_y = data[[self.phenotypePara]]
+                    train_x = pd.DataFrame(train_x, dtype='float32')
+                    train_y = pd.DataFrame(train_y, dtype='float32')
+                    # pls_param_grid = {'n_components': list(range(10,20))}
+                    # Train the data
+                    pls_param_grid = {'n_components':[10]}  
+                    warnings.filterwarnings('ignore', category=UserWarning)
+                    pls = GridSearchCV(PLSRegression(), param_grid=pls_param_grid,scoring='r2',cv=10)
+                    pls.fit(train_x, train_y)
 
-                        # test_x stores the raw data for one pixel; y_pre stores the dealt results for all pixels
-                        expanded_mask = np.expand_dims(self.plant_mask, axis=1)
-                        expanded_mask = np.repeat(expanded_mask, self.channels, axis=1)
-                        masked_array = np.ma.array(self.ReflectMatrix, mask=expanded_mask)
+                    # test_x stores the raw data for one pixel; y_pre stores the dealt results for all pixels
+                    expanded_mask = np.expand_dims(self.plant_mask, axis=1)
+                    expanded_mask = np.repeat(expanded_mask, self.channels, axis=1)
+                    masked_array = np.ma.array(self.ReflectMatrix, mask=expanded_mask)
 
-                        test_x = np.mean(masked_array[:, 6:-16, :],axis=(0,2)) # The data set of the train model only contains HS in parts of wavelength range
+                    test_x = np.mean(masked_array[:, 6:-16, :],axis=(0,2)) # The data set of the train model only contains HS in parts of wavelength range
 
-                        test_x = pd.Series(test_x, dtype='float32')
-                        test_x = test_x.to_frame().T
-                        predict_y = pls.predict(test_x)
-                        dataRow.append(predict_y[0][0])
+                    test_x = pd.Series(test_x, dtype='float32')
+                    test_x = test_x.to_frame().T
+                    predict_y = pls.predict(test_x)
+                    dataRow.append(predict_y[0][0])
                 writer.writerow(dataRow)
         
-        subprocess.run(['start', '', csv_folder], shell=True)
+        # subprocess.run(['start', '', csv_folder], shell=True)
 
 
 
