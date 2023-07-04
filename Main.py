@@ -274,6 +274,11 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.HSI = self.HSI_info[3]
                 self.HSI_wavelengths = self.HSI_info[4]
                 self.plant_mask = np.zeros((self.HSI_lines, self.HSI_samples), dtype=bool)
+                self.cur_proportion = 1
+
+                index1 = self.rawSpeFile_path.rfind("/")  
+                index2 = self.rawSpeFile_path.find(".", index1)
+                self.fileName = self.rawSpeFile_path[index1+1: index2]
                 
                 # Week amplititude detection
                 if np.max(self.HSI) < 1000:
@@ -293,8 +298,13 @@ class Main(QMainWindow, Ui_MainWindow):
             
             case "Save":
                 if self.rawSpeFile_path != "":
+                    if not os.path.exists("Outputs/figures/"+ self.fileName):
+                        os.makedirs("Outputs/figures/"+ self.fileName)
+                    if not os.path.exists("Outputs/results/" + self.fileName):
+                        os.makedirs("Outputs/results/" + self.fileName)
                     self.rgbImg = HSIpack.rd.drawImg(self.HSI_info)
                     self.rgbImg.save("Outputs/figures/" + self.fileName + "/raw.jpg")
+
                     if self.fileNum == 1:
                         QtWidgets.QMessageBox.about(self, "", "高光谱可视化数据保存成功")
 
@@ -322,6 +332,11 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.HSI = self.HSI_info[3]
                 self.HSI_wavelengths= self.HSI_info[4]
                 self.plant_mask = np.zeros((self.HSI_lines, self.HSI_samples), dtype=bool)
+                self.cur_proportion = 1
+
+                index1 = self.rawSpeFile_path.rfind("/")  
+                index2 = self.rawSpeFile_path.find(".", index1)
+                self.fileName = self.rawSpeFile_path[index1+1: index2]
                 # Unlock the view and Save function
                 self.BRFRawViewBtn.setEnabled(True)
                 self.BRFRawSaveBtn.setEnabled(True)
@@ -333,9 +348,6 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Save":
                 if self.BRFSpeFile_path != "":
                     self.rgbImg = HSIpack.rd.drawImg(self.HSI_info)
-                    index1 = self.BRFSpeFile_path.rfind("/")  
-                    index2 = self.BRFSpeFile_path.find(".", index1)
-                    self.fileName = self.BRFSpeFile_path[index1+1: index2]
                     # Handle multiple files saving
                     if not os.path.exists("Outputs/figures/BRF"):
                         os.makedirs("Outputs/figures/BRF")
@@ -427,7 +439,7 @@ class Main(QMainWindow, Ui_MainWindow):
             
             case "Save":
                 l1_rgbimg = HSIpack.rd.drawImg(self.HSI_info)
-                self.l1_rgbimg_path = "Outputs/figures/test/pre_process/" + str(self.fileNum) + "_level1.jpg"
+                self.l1_rgbimg_path = "Outputs/figures/"+ self.fileName + "/preprocess/level1.jpg"
                 l1_rgbimg.save(self.l1_rgbimg_path)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
@@ -470,8 +482,10 @@ class Main(QMainWindow, Ui_MainWindow):
                     QtWidgets.QMessageBox.about(self, "", "去除过暗过曝成功")
 
             case "Save":
+                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
                 l2_rgbImg = HSIpack.rd.drawImg(self.HSI_info)
-                self.l2_rgbimg_path = "Outputs/figures/test/pre_process/" + str(self.fileNum) + "_level2.jpg"
+                self.l2_rgbimg_path = "Outputs/figures/"+ self.fileName + "/preprocess/level2.jpg"
                 l2_rgbImg.save(self.l2_rgbimg_path)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
@@ -546,6 +560,8 @@ class Main(QMainWindow, Ui_MainWindow):
                     QtWidgets.QMessageBox.about(self, "", "光谱指数计算成功")
 
             case "Save":
+                if not os.path.exists("Outputs/figures/" + self.fileName + "/process"):
+                    os.makedirs("Outputs/figures/" + self.fileName + "/process")
                 self.pro_data.draw_pseudoColorImg("Save", 1)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "光谱指数计算结果保存成功")
@@ -578,6 +594,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 '''
 
             case "Save":
+                if not os.path.exists("Outputs/figures/" + self.fileName + "/process"):
+                    os.makedirs("Outputs/figures/" + self.fileName + "/process")
                 self.pro_data.draw_pseudoColorImg("Save", 2)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "光合表型参数计算结果保存成功")
@@ -700,32 +718,17 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
 
                     # get the file name
-                    index1 = self.rawSpeFile_path.rfind("/")  
-                    index2 = self.rawSpeFile_path.find(".", index1)
-                    self.fileName = self.rawSpeFile_path[index1+1: index2]
-                    # Make a new directory for each HSI and handle multiple files saving
-                    if not os.path.exists("Outputs/figures/"+ self.fileName):
-                        os.makedirs("Outputs/figures/"+ self.fileName)
-                    if not os.path.exists("Outputs/results/" + self.fileName):
-                        os.makedirs("Outputs/results/" + self.fileName)
-                    
                     self.getRgb("Gene")
                     self.getRgb("Save")
 
                     # get the preprocessed data
-                    if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
-                        os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
                     self.RmDb("Gene")
                     self.RmBg("Gene")
                     self.getReflect("Gene")
                     self.getReflect("Save")
 
                     # get the processed data
-                    if not os.path.exists("Outputs/figures/" + self.fileName + "/process"):
-                        os.makedirs("Outputs/figures/" + self.fileName + "/process")
-                    
                     # Output the figure
-
                     for j in range(len(self.Hs_Para_list)):
                         self.Hs_Para = self.Hs_Para_list[j]
                         self.getHsPara("Gene")
