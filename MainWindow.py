@@ -786,7 +786,7 @@ class Ui_MainWindow(object):
         self.actionSave.setObjectName("actionSave")
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -820,10 +820,10 @@ class Ui_MainWindow(object):
         self.lenShowBtn.setText(_translate("MainWindow", "NAN"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Tab1), _translate("MainWindow", "原始数据"))
         self.label_6.setText(_translate("MainWindow", "过暗矫正"))
-        self.amplLowThDb.setItemText(0, _translate("MainWindow", "2000"))
-        self.amplLowThDb.setItemText(1, _translate("MainWindow", "4000"))
-        self.amplLowThDb.setItemText(2, _translate("MainWindow", "3000"))
-        self.amplLowThDb.setItemText(3, _translate("MainWindow", "1000"))
+        self.amplLowThDb.setItemText(0, _translate("MainWindow", "1000"))
+        self.amplLowThDb.setItemText(1, _translate("MainWindow", "2000"))
+        self.amplLowThDb.setItemText(2, _translate("MainWindow", "4000"))
+        self.amplLowThDb.setItemText(3, _translate("MainWindow", "3000"))
         self.amplLowThDb.setItemText(4, _translate("MainWindow", "0"))
         self.label_7.setText(_translate("MainWindow", "过曝矫正"))
         self.amplHighThDb.setItemText(0, _translate("MainWindow", "4000"))

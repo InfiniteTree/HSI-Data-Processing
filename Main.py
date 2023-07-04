@@ -1,12 +1,12 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QGraphicsScene, QVBoxLayout, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem, QGraphicsPathItem, QLabel, QProgressBar
+from PyQt5.QtWidgets import QDialog, QMainWindow, QApplication, QFileDialog, QGraphicsScene, QVBoxLayout, QGraphicsPixmapItem, QGraphicsView, QGraphicsRectItem, QGraphicsPathItem, QLabel, QProgressBar
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QPainterPath
-from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QPointF, QTimer
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QPointF, QTimer, QThread
 
 import sys
 import os
-import csv
+import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
 import threading
@@ -239,7 +239,8 @@ class Main(QMainWindow, Ui_MainWindow):
             self.BRFSpeFile_path = self.BRFSpeFile_path.replace("\\","/")
             self.BRFPathlineEdit.setText(self.BRFSpeFile_path)            
             self.BRFHdrFile_path = self.BRFSpeFile_path.replace(".spe",".hdr")
-            self.fileNum = 1
+            if self.fileNum == 0: # Allow to upload multiple first
+                self.fileNum = 1
 
     # import the amplititude along diferent wavelengths of 3% and 30% BRF
     def importRftCaliFile(self):
@@ -259,6 +260,9 @@ class Main(QMainWindow, Ui_MainWindow):
         self.k, self.b = self.reflect.getReflectEquation()
         # Unlock the view and Save function
         QtWidgets.QMessageBox.about(self, "", "反射板校准已就绪")
+        if self.fileNum > 1:
+            self.multiGeneBtn.setEnabled(True)
+
 
     def getRgb(self, function):
         match function:
@@ -270,12 +274,19 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.HSI = self.HSI_info[3]
                 self.HSI_wavelengths = self.HSI_info[4]
                 self.plant_mask = np.zeros((self.HSI_lines, self.HSI_samples), dtype=bool)
+                
+                # Week amplititude detection
+                if np.max(self.HSI) < 1000:
+                    QtWidgets.QMessageBox.warning(self, "", "高光谱原始数据亮度值过低！请重新导入")
+
+                    return
                 # Unlock the view and Save function
                 if self.fileNum == 1:
                     self.rgbSaveBtn.setEnabled(True)
                     self.rgbViewBtn.setEnabled(True)
                     self.showHsiInfoBtn.setEnabled(True)
                     QtWidgets.QMessageBox.about(self, "", "高光谱原始数据处理成功")
+
                 elif self.fileNum > 1:
                     self.multiViewBtn.setEnabled(True)
                     
@@ -547,15 +558,9 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                 self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
-                count = 0
-                progress_bar = 0
                 for i in range(self.plantPixNum):
                     self.pro_data.CalcPhenotypeParas(i)
-                    count += 1
-                    if count == 100:
-                        count = 0
-                        progress_bar += 1
-                        print(progress_bar)
+                print("one figure processed successfully")
                 self.ptsthsSaveBtn.setEnabled(True)
                 self.ptsthsViewBtn.setEnabled(True)
                 if self.fileNum == 1:
@@ -612,7 +617,7 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                 self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
-                self.pro_data.exportHsParas("Outputs/results/" + self.fileName + "/AvgHsPara.csv", idx)
+                self.pro_data.exportHsParas("Outputs/results/AvgHsPara.csv", idx)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
 
@@ -621,20 +626,23 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Gene":
                 reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                 self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
-                self.pro_data.exportPhenotypeParas("Outputs/results/" + self.fileName + "/AvgPtsthsPara.csv", idx)
+                self.pro_data.exportPhenotypeParas("Outputs/results/AvgPtsthsPara.csv", idx)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "一键计算结果保存成功")
 
     # one-cliked processing for multiple files
     def importRaws(self): 
+        rawfile_names = []
         file_dialog = QFileDialog()
         self.selected_directory = file_dialog.getExistingDirectory(self, "选择文件夹")
         if self.selected_directory:
-            rawfile_names = os.listdir(self.selected_directory)
-            rawfile_names = [item.replace("\\","/") for item in rawfile_names if item.endswith(".spe")] # only show the .spe file
-            self.selected_directory = self.selected_directory.replace("\\","/")
-            self.rawfile_paths = [self.selected_directory + "/" + item for item in rawfile_names]
-            self.fileNum = len(rawfile_names)
+            rawfoleder_names = os.listdir(self.selected_directory)
+            for i in range(len(rawfoleder_names)):
+                #rawfile_names.append(item.replace("\\","/") for item in rawfile_names if item.endswith(".spe")) # only show the .spe file
+                self.selected_directory = self.selected_directory.replace("\\","/")
+                rawfile_names.append(rawfoleder_names[i] + ".spe")
+                self.rawfile_paths = [self.selected_directory + "/" + rawfoleder_names[i] + "/" + rawfoleder_names[i] + ".spe" for i in range(len(rawfoleder_names))]   
+                self.fileNum = len(self.rawfile_paths)
         
         # Bug remain here to do
         self.rawsLayout = QVBoxLayout(self.rawFilesWidget)
@@ -654,12 +662,37 @@ class Main(QMainWindow, Ui_MainWindow):
         
         self.multiFlag = 1
 
+    def labelClicked(self, label): 
+        self.raw = label.text()
+        self.rawSpeFile_path = self.selected_directory + "/" + self.raw
+        self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
+
+        # Refresh the widget background and Set the label background to the selected color
+        for child in self.rawFilesWidget.children():
+            if isinstance(child, QLabel):
+                child.setStyleSheet("background-color: None; font: 12pt 'Agency FB'; border: None;") 
+                            
+        label.setStyleSheet("background-color: lightblue")
+        #self.rawFilesWidget.setStyleSheet("background-color: transparent;")
+
     #Multiple files processing
     def multiProcess(self, function):
         match function:
             # Multiple files result generation
             case "Gene":
-                for i in range(len(self.rawfile_paths)):
+                threadNum = len(self.rawfile_paths)
+                # Show the progress dialog    
+                '''
+                progress_dialog = QtWidgets.QProgressDialog(self)
+                progress_dialog.setModal(True)
+                progress_dialog.setWindowTitle("Processing")
+                progress_dialog.setLabelText("Processing files...")
+                progress_dialog.setMinimum(0)
+                progress_dialog.setMaximum(threadNum)
+                progress_dialog.show()
+                '''
+
+                for i in range(threadNum):
                     # get the raw data
                     self.rawSpeFile_path = self.rawfile_paths[i]
                     self.rawSpeFile_path = self.rawSpeFile_path.replace("\\","/")
@@ -685,48 +718,46 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.RmDb("Gene")
                     self.RmBg("Gene")
                     self.getReflect("Gene")
+                    self.getReflect("Save")
 
                     # get the processed data
                     if not os.path.exists("Outputs/figures/" + self.fileName + "/process"):
                         os.makedirs("Outputs/figures/" + self.fileName + "/process")
                     
                     # Output the figure
-                    '''
+
                     for j in range(len(self.Hs_Para_list)):
                         self.Hs_Para = self.Hs_Para_list[j]
                         self.getHsPara("Gene")
                         self.getHsPara("Save")
-
+                    
+                    # Bugs remains here
+                    '''
                     for j in range(len(self.Ptsths_Para_list)):
                         self.Ptsths_Para = self.Ptsths_Para_list[j]
                         self.getPtsthsPara("Gene")
                         self.getPtsthsPara("Save")
                     '''
+                    
 
                     # Output the result
-                    self.outputAvgPtsthsParas("Gene", i)
-                    self.outputAvgHsParas("Gene", i)
+                    self.outputAvgPtsthsParas("Gene", i+1)  # start from i = 1
+                    self.outputAvgHsParas("Gene", i+1) # start from i = 1
+                    
+                    # Data re-initiailization
+                    self.cur_proportion = 1
 
-                    QtWidgets.QMessageBox.about(self, "", "一键完成")
+                    # Update the progress
+                    #progress_dialog.setValue(i + 1)
+                    #QtWidgets.QApplication.processEvents()  # Allow GUI updates
+
+                #progress_dialog.close()
+                QtWidgets.QMessageBox.about(self, "", "一键完成")
 
             # To show the multiple files result 
             case "View":
                 return
 
-
-    def labelClicked(self, label): 
-        self.raw = label.text()
-        self.rawSpeFile_path = self.selected_directory + "/" + self.raw
-        self.rawHdrFile_path = self.rawSpeFile_path.replace(".spe",".hdr")
-
-        # Refresh the widget background and Set the label background to the selected color
-        for child in self.rawFilesWidget.children():
-            if isinstance(child, QLabel):
-                child.setStyleSheet("background-color: None; font: 12pt 'Agency FB'; border: None;") 
-                            
-        label.setStyleSheet("background-color: lightblue")
-
-        #self.rawFilesWidget.setStyleSheet("background-color: transparent;")
     # ----------------------------Tab4-----------------------------
 
 class hsiRawView(QGraphicsView):
@@ -911,6 +942,7 @@ class RFCurve(QGraphicsView):
     # delete the cross path after close the event   
     def closeEvent(self, event):
         self.crosshair_item.setPath(QPainterPath())
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

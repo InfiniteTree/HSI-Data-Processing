@@ -42,7 +42,7 @@ QTabBar::tab{height:30}
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="iconSize">
        <size>
@@ -738,6 +738,11 @@ font: 12pt &quot;Agency FB&quot;;</string>
                        <widget class="QComboBox" name="amplLowThDb">
                         <item>
                          <property name="text">
+                          <string>1000</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
                           <string>2000</string>
                          </property>
                         </item>
@@ -749,11 +754,6 @@ font: 12pt &quot;Agency FB&quot;;</string>
                         <item>
                          <property name="text">
                           <string>3000</string>
-                         </property>
-                        </item>
-                        <item>
-                         <property name="text">
-                          <string>1000</string>
                          </property>
                         </item>
                         <item>

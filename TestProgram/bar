@@ -1,0 +1,20 @@
+                self.setWindowTitle("Progress Window")
+                self.setMinimumWidth(400)
+
+                self.progress_bar = QProgressBar()
+                self.progress_bar.setMinimum(0)
+                self.progress_bar.setMaximum(100)
+
+                # button_box = QDialogButtonBox()
+                # button_box.setStandardButtons(QDialogButtonBox.Cancel)
+
+                layout = QVBoxLayout()
+                layout.addWidget(self.progress_bar)
+                #layout.addWidget(button_box)
+
+                self.setLayout(layout)
+
+                for i in range(threadNum):
+                    self.worker_thread = WorkerThread(i)
+                    self.worker_thread.progress_updated.connect(self.update_progress)
+                    self.worker_thread.start()

@@ -1,6 +1,5 @@
 import numpy as np
 import warnings
-import subprocess
 import csv
 import os
 
@@ -67,7 +66,7 @@ class Process:
     
     # Calculate the relative values the photosynthesis by the design formulas
     def calcHsParas(self):
-        print(self.hsPara)
+        #print(self.hsPara)
         match self.hsPara:
             case "NDVI":
                 numerator =  self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band680"],:]
@@ -205,12 +204,13 @@ class Process:
             # Self defined formular
             case "user-defined":
                 print("ok")
-        
+        '''
         if np.any(self.ParaMatrix > 10):
             print("Yes >10")
         
         if np.any(self.ParaMatrix < -10):
             print("Yes <10")
+        '''
 
         #self.ParaMatrix[self.ParaMatrix < -1] = -1
         #self.ParaMatrix[self.ParaMatrix > 1] = 1
@@ -264,7 +264,7 @@ class Process:
                         ax.set_title("Pseudo_Color Map of the Relative Values on PRI", y=1.05)
                     case "MTVI2":
                         im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
-                        ax.set_title("Pseudo_Color Map of the Relative Values on SPAD", y=1.05)
+                        ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
 
                     case "SR":
                         im = ax.imshow(cropped_image, cmap='gray',interpolation='nearest')
@@ -363,11 +363,15 @@ class Process:
         # if self.hsPara not in self.FirstRow:
         # Export the results
         # csv_folder = os.path.dirname(os.path.abspath(filename))
-        with open(filename,"a",newline='') as f:
+        writeFlag = "w"
+        if idx > 1:
+            writeFlag = "a"
+        with open(filename,writeFlag,newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(FirstRow)
+            if idx == 1:
+                writer.writerow(FirstRow)
             meanHsPara = [] # initialize
-            meanHsPara.append(idx+1)
+            meanHsPara.append(idx)
             for j in range(len(FirstRow)-1):
                 self.hsPara = FirstRow[j+1]
                 self.calcHsParas()
@@ -377,15 +381,20 @@ class Process:
         # subprocess.run(['start', '', csv_folder], shell=True)
 
     def exportPhenotypeParas(self, filename, idx):
-        FirstRow = ["PlotIdx","SPAD", "A1200", "N", "Ca", "Cb"]
+        FirstRow = ["Idx","file","SPAD", "A1200", "N", "Ca", "Cb"]
         # if self.hsPara not in self.FirstRow:
         # Export the results
         # csv_folder = os.path.dirname(os.path.abspath(filename))
-        with open(filename,"a",newline='') as f:
+        writeFlag = "w"
+        if idx > 1:
+            writeFlag = "a"
+        with open(filename, writeFlag, newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(FirstRow)
+            if idx == 1:
+                writer.writerow(FirstRow)
             dataRow = [] # initialize
             dataRow.append(idx)
+            dataRow.append(self.filename[:-4])
             for j in range(len(FirstRow)-1):
                 if self.phenotypeParaModel == "PLSR":
                     data = pd.read_csv("model/LearningData/TrainData.csv")
@@ -424,7 +433,7 @@ class Process:
                     test_x = test_x.to_frame().T
                     predict_y = pls.predict(test_x)
                     dataRow.append(predict_y[0][0])
-                writer.writerow(dataRow)
+            writer.writerow(dataRow)
         
         # subprocess.run(['start', '', csv_folder], shell=True)
 

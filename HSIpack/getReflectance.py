@@ -227,7 +227,7 @@ class Reflectance:
         wavelengths = self.HSI_info[4][2:-22]
         FirstRow = wavelengths
         ReflectRow = self.AVG_reflect[2:-22]
-        
+
         with open("Outputs/results/" + self.fileName + "/ReflectCurve.csv","w",newline='') as f:
             writer = csv.writer(f)
             # Write the first row
@@ -240,12 +240,14 @@ class Reflectance:
         # Plotting
         x = np.array(self.HSI_info[4])[2:-22] # only use the data within 400nm to 990nm
         y = np.array(self.AVG_reflect)[2:-22] # only use the data within 400nm to 990nm
+        plt.xlabel("Wavelength(nm)")
+        plt.ylabel("Hyperspectral Luminance")
         plt.xticks(range(400, 1000, 100))
-        plt.plot(x,y,c='b',label='Curve_poly_Fit')
+        plt.plot(x,y,c='lightcoral',label='Curve_poly_Fit')
         #plt.xticks(range(400, 1000, 100))
-        plt.title("The Reflectance curve of the whole plot")
+        plt.title("The Average Reflectance Curve of the Plant Part")
         if saveFlag ==1:
-            plt.savefig("Outputs/figures/" + self.fileName +"/Reflectance_curve_new.jpg")
+            plt.savefig("Outputs/figures/" + self.fileName + "/preprocess/Reflectance_curve_new.jpg")
         elif saveFlag ==0:
             plt.show()
 

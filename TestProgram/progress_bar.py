@@ -1,41 +1,67 @@
-from PyQt5.QtWidgets import QMainWindow, QProgressBar, QPushButton, QApplication
-from PyQt5.QtCore import QTimer
-
+import sys
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, QProgressBar, QDialogButtonBox
+from PyQt5.QtCore import QTimer, QThread, pyqtSignal
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.progress_bar = QProgressBar(self)
-        self.progress_bar.setGeometry(30, 40, 200, 25)
+        self.setWindowTitle("Main Window")
+        self.setGeometry(100, 100, 300, 200)
 
-        self.start_button = QPushButton('Start', self)
-        self.start_button.setGeometry(30, 80, 75, 30)
-        self.start_button.clicked.connect(self.start_progress)
+        button = QPushButton("Open Progress Window")
+        button.clicked.connect(self.open_progress_window)
 
-    def start_progress(self):
-        self.progress_value = 0
-        self.progress_bar.setValue(self.progress_value)
+        layout = QVBoxLayout()
+        layout.addWidget(button)
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_progress)
-        self.timer.start(100)  # 每100毫秒更新一次进度条
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
 
-    def update_progress(self):
-        self.progress_value += 1
-        self.progress_bar.setValue(self.progress_value)
+    def open_progress_window(self):
+        progress_window = ProgressWindow(self)
+        progress_window.show()
 
-        if self.progress_value >= 100:
-            self.timer.stop()
+class WorkerThread(QThread):
+    progress_updated = pyqtSignal(int)
 
-    def closeEvent(self, event):
-        # 在窗口关闭时停止定时器
-        self.timer.stop()
-        event.accept()
+    def run(self):
+        counter = 0
+        while counter <= 100:
+            self.progress_updated.emit(counter)
+            counter += 1
+            self.msleep(100)  # 模拟耗时任务
 
+class ProgressWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Progress Window")
+        self.setMinimumWidth(400)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
+
+        button_box = QDialogButtonBox()
+        #button_box.setStandardButtons(QDialogButtonBox.Cancel)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.progress_bar)
+        layout.addWidget(button_box)
+
+        self.setLayout(layout)
+
+        self.worker_thread = WorkerThread()
+        self.worker_thread.progress_updated.connect(self.update_progress)
+        self.worker_thread.start()
+
+    def update_progress(self, value):
+        self.progress_bar.setValue(value)
 
 if __name__ == '__main__':
-    app = QApplication([])
+    app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-    app.exec()
+    sys.exit(app.exec_())
