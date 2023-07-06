@@ -10,15 +10,15 @@
     <x>0</x>
     <y>0</y>
     <width>1142</width>
-    <height>834</height>
+    <height>832</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string notr="true">高光谱数据分析</string>
+   <string notr="true">高光谱数据分析V1.0</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../MilletHill/logo/公司logo图片/MH.png</normaloff>../MilletHill/logo/公司logo图片/MH.png</iconset>
+    <normaloff>MH.png</normaloff>MH.png</iconset>
   </property>
   <property name="iconSize">
    <size>
@@ -42,7 +42,7 @@ QTabBar::tab{height:30}
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="iconSize">
        <size>
@@ -311,7 +311,7 @@ font: 12pt &quot;Agency FB&quot;;
                          <cursorShape>PointingHandCursor</cursorShape>
                         </property>
                         <property name="text">
-                         <string>矫正</string>
+                         <string>校正</string>
                         </property>
                        </widget>
                       </item>
@@ -610,7 +610,7 @@ font: 12pt &quot;Agency FB&quot;;
                          <x>0</x>
                          <y>0</y>
                          <width>454</width>
-                         <height>109</height>
+                         <height>107</height>
                         </rect>
                        </property>
                        <layout class="QHBoxLayout" name="horizontalLayout_22">
@@ -1218,7 +1218,7 @@ font: 12pt &quot;Agency FB&quot;;</string>
                 <x>0</x>
                 <y>0</y>
                 <width>528</width>
-                <height>727</height>
+                <height>725</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -1264,6 +1264,9 @@ font: 12pt &quot;Agency FB&quot;;</string>
                 <layout class="QHBoxLayout" name="horizontalLayout_43">
                  <item>
                   <widget class="QPushButton" name="multiGeneBtn">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
@@ -1817,11 +1820,6 @@ font: 12pt &quot;Agency FB&quot;;</string>
          </widget>
         </item>
        </layout>
-      </widget>
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>模型训练</string>
-       </attribute>
       </widget>
      </widget>
     </item>

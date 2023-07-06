@@ -15,10 +15,10 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
-        MainWindow.resize(1142, 834)
-        MainWindow.setWindowTitle("高光谱数据分析")
+        MainWindow.resize(1142, 832)
+        MainWindow.setWindowTitle("高光谱数据分析V1.0")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../MilletHill/logo/公司logo图片/MH.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("MH.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setIconSize(QtCore.QSize(30, 70))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -296,7 +296,7 @@ class Ui_MainWindow(object):
         self.WaveScrollArea.setWidgetResizable(True)
         self.WaveScrollArea.setObjectName("WaveScrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 454, 109))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 454, 107))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.horizontalLayout_22 = QtWidgets.QHBoxLayout(self.scrollAreaWidgetContents)
         self.horizontalLayout_22.setObjectName("horizontalLayout_22")
@@ -539,7 +539,7 @@ class Ui_MainWindow(object):
         self.RawFilesScrollArea.setWidgetResizable(True)
         self.RawFilesScrollArea.setObjectName("RawFilesScrollArea")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 528, 727))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 528, 725))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.verticalLayout_19 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_19.setObjectName("verticalLayout_19")
@@ -568,6 +568,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_43 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_43.setObjectName("horizontalLayout_43")
         self.multiGeneBtn = QtWidgets.QPushButton(self.scrollAreaWidgetContents_2)
+        self.multiGeneBtn.setEnabled(False)
         self.multiGeneBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.multiGeneBtn.setObjectName("multiGeneBtn")
         self.horizontalLayout_43.addWidget(self.multiGeneBtn)
@@ -772,9 +773,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_33.addWidget(self.frame_14)
         self.horizontalLayout_38.addWidget(self.frame_9)
         self.tabWidget.addTab(self.Tab3, "")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.tabWidget.addTab(self.tab, "")
         self.verticalLayout_3.addWidget(self.tabWidget)
         MainWindow.setCentralWidget(self.centralwidget)
         self.actionopen_file = QtWidgets.QAction(MainWindow)
@@ -786,7 +784,7 @@ class Ui_MainWindow(object):
         self.actionSave.setObjectName("actionSave")
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -803,7 +801,7 @@ class Ui_MainWindow(object):
         self.importRftCaliFileBtn.setText(_translate("MainWindow", "导入反射率校准文件"))
         self.label_10.setText(_translate("MainWindow", "文件夹路径："))
         self.BRFCaliPathlineEdit.setText(_translate("MainWindow", "反射板校准文件路径"))
-        self.RefCaliBtn.setText(_translate("MainWindow", "矫正"))
+        self.RefCaliBtn.setText(_translate("MainWindow", "校正"))
         self.impRawBtn.setText(_translate("MainWindow", "导入单张原始照片"))
         self.rgbGeneBtn.setText(_translate("MainWindow", "处理"))
         self.rgbSaveBtn.setText(_translate("MainWindow", "保存"))
@@ -905,13 +903,11 @@ class Ui_MainWindow(object):
         self.AvgHsParaGeneBtn.setText(_translate("MainWindow", "光谱指数一键计算保存"))
         self.AvgPtsthsParaGeneBtn.setText(_translate("MainWindow", "表型参数一键计算保存"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Tab3), _translate("MainWindow", "数据分析"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "模型训练"))
         self.actionopen_file.setText(_translate("MainWindow", "Import File"))
         self.actionOpen_File_Folder.setText(_translate("MainWindow", "Open File Folder"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSave.setStatusTip(_translate("MainWindow", "Save a file"))
         self.actionSave.setShortcut(_translate("MainWindow", "Ctrl+S"))
-
 
 if __name__ == "__main__":
     import sys

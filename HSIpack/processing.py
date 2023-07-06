@@ -271,7 +271,7 @@ class Process:
                         ax.set_title("Pseudo_Color Map of the Relative Values on SR", y=1.05)
                     case "DVI":
                         im = ax.imshow(cropped_image, cmap='viridis',interpolation='nearest')
-                        ax.set_title("Pseudo_Color Map of the Relative Values on DVI", y=1.05)
+                        ax.set_title("Pseudo_Color Map of the Relative Values on Ca", y=1.05)
                     case "SIPI":
                         im = ax.imshow(cropped_image, cmap='spring',interpolation='nearest')
                         ax.set_title("Pseudo_Color Map of the Relative Values on SIPI", y=1.05)

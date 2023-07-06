@@ -243,7 +243,7 @@ class Reflectance:
         plt.xlabel("Wavelength(nm)")
         plt.ylabel("Hyperspectral Luminance")
         plt.xticks(range(400, 1000, 100))
-        plt.plot(x,y,c='lightcoral',label='Curve_poly_Fit')
+        plt.plot(x,y,c='orange',label='Curve_poly_Fit')
         #plt.xticks(range(400, 1000, 100))
         plt.title("The Average Reflectance Curve of the Plant Part")
         if saveFlag ==1:

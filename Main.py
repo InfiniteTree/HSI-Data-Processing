@@ -131,11 +131,10 @@ class Main(QMainWindow, Ui_MainWindow):
         # Get k and b of the reflectance equation
         self.importRftCaliFileBtn.clicked.connect(self.importRftCaliFile)
         self.RefCaliBtn.clicked.connect(self.RefCali)
-        
-        
+
         # Import the single raw HSI file
         self.impRawBtn.clicked.connect(self.importRaw)
-        self.impRawBtn.setGeometry(50, 50, 200, 30)
+        self.impRawBtn.setGeometry(50, 50, 200, 30) 
 
         # Read the raw file
         self.rgbGeneBtn.clicked.connect(lambda:self.getRgb("Gene"))
@@ -206,8 +205,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.ptsthsSaveBtn.clicked.connect(lambda: self.getPtsthsPara("Save"))
         self.ptsthsViewBtn.clicked.connect(lambda: self.getPtsthsPara("View"))
 
-        self.AvgHsParaGeneBtn.clicked.connect(lambda: self.outputAvgHsParas("Gene"), 1)
-        self.AvgPtsthsParaGeneBtn.clicked.connect(lambda: self.outputAvgPtsthsParas("Gene"), 1)
+        self.AvgHsParaGeneBtn.clicked.connect(lambda: self.outputAvgHsParas("Gene",1))
+        self.AvgPtsthsParaGeneBtn.clicked.connect(lambda: self.outputAvgPtsthsParas("Gene",1))
 
         # One-click processing for multiples file 
         # Import the multiples raw HSI files
@@ -801,8 +800,7 @@ class hsiRawView(QGraphicsView):
                 BRF3_x1 = int(BRF3_x0 + rect.width())
                 BRF3_y1 = int(BRF3_y0 + rect.height())
                 md.BRF3_pos_range = [[BRF3_x0,BRF3_y0],[BRF3_x1, BRF3_y1]]
-                #print(md.BRF3_pos_range)
-                
+                #print(md.BRF3_pos_range)          
             
             elif self.BRF_flag == "30":
                 BRF30_x0 = int(rect.x())
@@ -816,7 +814,6 @@ class hsiRawView(QGraphicsView):
             self.selection_rect = None
         self.selecting = False
 
-
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.resetSelection()
@@ -825,7 +822,6 @@ class hsiRawView(QGraphicsView):
             pos_in_scene = self.mapToScene(pos_in_view)
             self.selection_rect.setRect(QRectF(pos_in_scene, pos_in_scene))
             self.scene().addItem(self.selection_rect)
-
 
     def mouseMoveEvent(self, event):
         if self.selecting and self.selection_rect is not None:
