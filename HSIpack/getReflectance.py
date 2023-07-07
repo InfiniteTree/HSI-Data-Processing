@@ -25,7 +25,6 @@ class Reflectance:
         self.b = b
         self.plantMask = plant_mask
         self.fileName = filename
-        #print(self.BRF_positionRange)
 
 
     def getReferAmplititudes(self, BRF_flag):
@@ -33,12 +32,11 @@ class Reflectance:
         HSI = self.HSI_info[3]
         #positionRange  i.e. (860,83),(890,120) for 3% Ref Board
         Amplititudes = []
-
         if BRF_flag == "3":
             RefHSI = HSI[self.BRF_positionRange[0][0][1]:self.BRF_positionRange[0][1][1],:,self.BRF_positionRange[0][0][0]:self.BRF_positionRange[0][1][0]]
         elif BRF_flag == "30":
              RefHSI = HSI[self.BRF_positionRange[1][0][1]:self.BRF_positionRange[1][1][1],:,self.BRF_positionRange[1][0][0]:self.BRF_positionRange[1][1][0]]
-        
+
         for i in range(channels):
             Amplititudes.append(np.array(RefHSI[:,i,:]).mean())
 

@@ -42,7 +42,7 @@ QTabBar::tab{height:30}
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="iconSize">
        <size>
@@ -635,7 +635,7 @@ font: 12pt &quot;Agency FB&quot;;
             </widget>
            </item>
            <item>
-            <widget class="QGraphicsView" name="hsiRawView">
+            <widget class="QGraphicsView" name="hsiRawViewBox">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                <horstretch>0</horstretch>
@@ -1179,7 +1179,7 @@ font: 12pt &quot;Agency FB&quot;;</string>
             </widget>
            </item>
            <item>
-            <widget class="QGraphicsView" name="hsidealtView"/>
+            <widget class="QGraphicsView" name="hsidealtViewBox"/>
            </item>
           </layout>
          </widget>

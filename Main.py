@@ -316,9 +316,9 @@ class Main(QMainWindow, Ui_MainWindow):
                     # the rgb scene in Tab1
                     self.raw_scene = QGraphicsScene()
                     self.raw_scene.addItem(item)
-                    self.hsiRawView.setScene(self.raw_scene)
+                    self.hsiRawViewBox.setScene(self.raw_scene)
                     # Make the graph self-adaptive to the canvas
-                    self.hsiRawView.fitInView(self.raw_scene.sceneRect(), Qt.KeepAspectRatio)
+                    self.hsiRawViewBox.fitInView(self.raw_scene.sceneRect(), Qt.KeepAspectRatio)
                     self.HSCurveBtn.setEnabled(True)
 
     def getBRFRgb(self, function):
@@ -365,7 +365,7 @@ class Main(QMainWindow, Ui_MainWindow):
                     # the rgb scene in Tab1
                     self.raw_scene = QGraphicsScene()
                     self.raw_scene.addItem(item)
-                    self.hsiRawView.setScene(self.raw_scene)
+                    self.hsiRawViewBox.setScene(self.raw_scene)
 
                     # Unlock
                     self.selectBox3Btn.setEnabled(True)
@@ -450,7 +450,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 # the rgb scene in Tab1
                 self.dealt_scene = QGraphicsScene()
                 self.dealt_scene.addItem(item)
-                self.hsidealtView.setScene(self.dealt_scene)
+                self.hsidealtViewBox.setScene(self.dealt_scene)
                 # Make the graph self-adaptive to the canvas
                 #self.hsidealtView.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
                 '''
@@ -496,7 +496,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 # the rgb scene in Tab1
                 self.dealt_scene = QGraphicsScene()
                 self.dealt_scene.addItem(item)
-                self.hsidealtView.setScene(self.dealt_scene)
+                self.hsidealtViewBox.setScene(self.dealt_scene)
     
     # Calculate the reflectance
     def getReflect(self, function):
