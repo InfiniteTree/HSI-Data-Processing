@@ -14,15 +14,30 @@ class Process:
     hsPara = ""
     phenotypePara = ""
     ptsthsParaModel = ""
-    ReflectMatrix = []
 
-    ParaMatrix = []
     cur_proportion = 1
-
     lines = 0
     channels = 0
     samples = 0
     waveStart = 0
+
+    ReflectMatrix = [] # Used to store the reflectance matricx
+    ParaMatrix = [] # Used to store the parameter matricx: hyperspectra para matrix or Phenotype matrix
+    ### masked_array = [] # Used to store the parameter matricx that will be shown in color map
+    # used to get the range of the cropped image
+    min_row = 0
+    max_row = lines
+    min_col = 0
+    max_col = samples
+    min_row_f = 0
+    max_row_f = lines
+    min_col_f = 0
+    max_col_f = lines
+
+    PtMin = 0
+    PtMax = 0
+
+    count = 0 # temp value
 
     FirstRow = []  # The first row to write
     pls = None # the PLSR model
@@ -33,7 +48,7 @@ class Process:
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
     map_band = {"band430":16, "band445":22, "band500":47, "band510":51,"band531":62, "band550":70, "band570":80, "band635":110, "band670":126, "band680":131, "band700":139, "band705":143, "band750":164,"band780":178, "band800":188, "band900":235,"band970":268}
     
-    def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType, plant_mask, filename):
+    def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType, plant_mask, filename, PtParaMatrixValMin, PtParaMatrixValMax):
         self.Reflect_Info = reflectInfo
         self.hsPara = hsParaType
         self.phenotypePara = phenotypeParaType
@@ -48,6 +63,27 @@ class Process:
         self.plant_mask = plant_mask
         self.ParaMatrix = np.zeros((self.lines, self.samples))
         self.filename = filename
+        self.PtMin = PtParaMatrixValMin 
+        self.PtMax = PtParaMatrixValMax
+
+        # Make a bounding box to show the plant graph only
+        rows, cols = np.nonzero(~self.plant_mask)
+        self.min_row, self.max_row = np.min(rows), np.max(rows)
+        self.min_col, self.max_col = np.min(cols), np.max(cols)
+        # Remain some blank for the outside of the graph
+        self.min_col_f = self.min_col - int(1/8 *(self.max_col - self.min_col))
+        self.max_col_f = self.max_col + int(1/8 *(self.max_col - self.min_col))
+        self.min_row_f = self.min_row - int(1/8 *(self.max_row - self.min_row))
+        self.max_row_f = self.max_row + int(1/8 *(self.max_row - self.min_row))
+        # False dectection for the plot bound
+        if self.min_col_f < 0:
+            self.min_col_f =  0
+        if self.min_row_f < 0:
+            self.min_row_f =  0
+        if self.max_col_f > self.samples:
+            self.max_col_f = self.samples
+        if self.max_row_f > self.lines:
+            self.max_row_f = self.lines
 
         # Train the model
         data = pd.read_csv("model/LearningData/TrainData.csv")
@@ -217,33 +253,13 @@ class Process:
 
         #print(self.ParaMatrix)
 
-    def draw_pseudoColorImg(self, op_flag, para_flag):
+    def draw_pseudoColorImg(self, op_flag, para_flag, colorMapType):
         #print(self.ParaMatrix)
         fig, ax = plt.subplots(figsize=(6, 8))
-        #print(self.hsPara)
+        # get the cropped image
         masked_array = np.ma.array(self.ParaMatrix, mask=self.plant_mask)
-
-        # Make a bounding box to show the plant graph only
-        rows, cols = np.nonzero(~self.plant_mask)
-        min_row, max_row = np.min(rows), np.max(rows)
-        min_col, max_col = np.min(cols), np.max(cols)
-        
-        # Remain some blank for the outside of the graph
-        min_col_f = min_col - int(1/8 *(max_col - min_col))
-        max_col_f = max_col + int(1/8 *(max_col - min_col))
-        min_row_f = min_row - int(1/8 *(max_row - min_row))
-        max_row_f = max_row + int(1/8 *(max_row - min_row))
-        # False dectection for the plot bound
-        if min_col_f < 0:
-            min_col_f =  0
-        if min_row_f < 0:
-            min_row_f =  0
-        if max_col_f > self.samples:
-            max_col_f = self.samples
-        if max_row_f > self.lines:
-            max_row_f = self.lines
-
-        cropped_image = masked_array[min_row_f:max_row_f+1, min_col_f:max_col_f+1]
+        cropped_image = masked_array[self.min_row_f:self.max_row_f+1, self.min_col_f:self.max_col_f+1]
+        #print(self.hsPara)
         match para_flag:
             case 1:
                 match self.hsPara:
@@ -265,7 +281,6 @@ class Process:
                     case "MTVI2":
                         im = ax.imshow(cropped_image, cmap='hot',interpolation='nearest')
                         ax.set_title("Pseudo_Color Map of the Relative Values on MTVI2", y=1.05)
-
                     case "SR":
                         im = ax.imshow(cropped_image, cmap='gray',interpolation='nearest')
                         ax.set_title("Pseudo_Color Map of the Relative Values on SR", y=1.05)
@@ -303,8 +318,8 @@ class Process:
                     plt.show()
             
             case 2:
-                im = ax.imshow(cropped_image, cmap='viridis',interpolation='nearest')
-                ax.set_title("Pseudo_Color Map of the Relative Values on SPAD", y=1.05)
+                im = ax.imshow(cropped_image, cmap=colorMapType,interpolation='nearest', vmin=self.PtMin, vmax=self.PtMax) # bug! need to be reset here
+                ax.set_title("Pseudo_Color Map of the Relative Values on " + self.phenotypePara, y=1.05)
                 cbar = fig.colorbar(im)
                 if op_flag == "Save": 
                     plt.savefig("Outputs/figures/" + self.filename + "/process/" + self.phenotypePara + ".jpg")
@@ -313,24 +328,31 @@ class Process:
                 if op_flag == "View": # Consider to just load the figure here!!!!!!!!!
                     plt.show()
 
-    # Machine learning prediction
+    # Machine learning prediction 
     def CalcPhenotypeParas(self, index):
         # Fault Value Detection
             # Get the remaining parameters by using the trained model to predict
-            if self.phenotypeParaModel == "PLSR":
+            row_t = index//self.samples
+            col_t = index%self.samples
+            if self.phenotypeParaModel == "PLSR" and row_t > self.min_row and row_t < self.max_row and col_t > self.min_col and col_t < self.max_col:
                 # test_x stores the raw data for one pixel; y_pre stores the dealt results for all pixels
-                test_x = self.ReflectMatrix[index//self.samples,6:-16,index%self.samples] # The data set of the train model only contains HS in parts of wavelength range
-                test_x = pd.Series(test_x, dtype='float32')
-                test_x = test_x.to_frame().T
-                self.ParaMatrix[index//self.samples, index%self.samples] = self.pls.predict(test_x)
+                if self.plant_mask[row_t][col_t] == False: # Pixs that belongs to the plant
+                    test_x = self.ReflectMatrix[row_t,6:-16,col_t] # The data set of the train model only contains HS in parts of wavelength range
+                    test_x = pd.Series(test_x, dtype='float32')
+                    test_x = test_x.to_frame().T
+                    self.ParaMatrix[row_t, col_t] = self.pls.predict(test_x)
+                else:
+                    self.ParaMatrix[row_t, col_t] = 0
+                
+                # handle fault value; any reason that produce them???
+                if self.ParaMatrix[row_t, col_t] < self.PtMin or self.ParaMatrix[row_t, col_t] > self.PtMax:
+                    self.count += 1
+                    self.ParaMatrix[row_t, col_t] = 0
 
     # export file 1 to store the spectra data  
     def HyperspectraCurve(self, HSI_info, proportion):
         # Show the spectra curve
         wavelengths = HSI_info[4]
-        lines = HSI_info[0]
-        channels= HSI_info[1]
-        samples = HSI_info[2]
         HSI = HSI_info[3]
         remainRow = []
 

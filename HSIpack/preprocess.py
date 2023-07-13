@@ -12,11 +12,11 @@ class Preprocess:
     cur_proportion = 1
 
     ######------------------------------ Level 1 Data -------------------------------######
-    NDVI_TH_LOW = -1 #
-    NDVI_TH_HIGH =1  #
+    NDVI_TH_LOW = -1 # 
+    NDVI_TH_HIGH =1  # 
     NDVI = []        # shape = (n, 1, m)
-    band800 = 195    #
-    band670 = 134    #
+    band800 = 195    # 
+    band670 = 134    # 
     ######------------------------------ Level 2 Data -------------------------------######
     ShadowTHValue = 100 # the set mean threshold Hyspectra value for the leaves in shadow
     BrightTHValue = 800 # the set mean threshold Hyspectra value for the leaves in bright
@@ -76,6 +76,11 @@ class Preprocess:
         self.HSI_info = [self.lines, self.channels, self.samples, HSI, self.wavelengths]
 
         return HSI, np.array(Plant_pos), self.BG_Counter, NDVI, level1_mask
+
+    # Get the Level1 HSI by calculating the avg spectra value due to the avg num range
+    def getLevel0(self, avgRangeNum):
+        # Use blur Filter to do the convolution
+        return
 
     # Get the Level1 HSI by removing the background 
     def getLevel1(self):

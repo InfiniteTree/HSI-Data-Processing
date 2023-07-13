@@ -57,6 +57,7 @@ class Main(QMainWindow, Ui_MainWindow):
     HSI_channels = 300 # Default wavelength value
     HSI = [[[]]] # 3-D HSI img
     HSI_wavelengths = [] # ranging from apporximately 400nm to 1000nm
+    pixNum = 0 # number of the pix of the whole photo
 
     # Data for reference board image
     BRF_HSI_info = []
@@ -98,11 +99,15 @@ class Main(QMainWindow, Ui_MainWindow):
     Hs_Para = ""
     Ptsths_Para = ""
     Ptsths_Para_Model = ""
+    ptColorMapType = ""
+    hsColorMapType = ""
 
     pro_data = None
 
     Hs_Para_list = ["NDVI","OSAVI", "PSSRa","PSSRb", "PRI","MTVI2","SR", "DVI", "SIPI", "PSRI", "CRI1", "CRI2", "ARI1", "ARI2", "WBI"]
     Ptsths_Para_list = ["SPAD","A1200", "N", "Ca", "Cb"]
+    PtMin = 0
+    PtMax = 0
 
     ###-------------------------------------------The End line---------------------------------------------------###
 
@@ -168,15 +173,23 @@ class Main(QMainWindow, Ui_MainWindow):
         self.amplLowThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(3))
         self.amplHighThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(4))
 
-        # Level 1-2 pre-processing
+        # Level 1-3 pre-processing
+        # Spectral averaging 
+        self.HSIAvgGeneBtn.clicked.connect(lambda: self.HSIAvg(1))
+        self.HSIAvgSaveBtn.clicked.connect(lambda: self.HSIAvg(2))
+        self.HSIAvgViewBtn.clicked.connect(lambda: self.HSIAvg(3))
+        
+        # Remove background by NDVI
         self.RmBgGeneBtn.clicked.connect(lambda: self.RmBg("Gene"))
         self.RmBgViewBtn.clicked.connect(lambda: self.RmBg("View"))
         self.RmBgSaveBtn.clicked.connect(lambda: self.RmBg("Save"))
 
+        # Remove dark and brigth by amplititudes
         self.RmDbGeneBtn.clicked.connect(lambda: self.RmDb("Gene"))
         self.RmDbViewBtn.clicked.connect(lambda: self.RmDb("View"))
         self.RmDbSaveBtn.clicked.connect(lambda: self.RmDb("Save"))
 
+        # Get the reflectance
         self.RefGeneBtn.clicked.connect(lambda: self.getReflect("Gene"))
         self.RefViewBtn.clicked.connect(lambda: self.getReflect("View"))
         self.RefSaveBtn.clicked.connect(lambda: self.getReflect("Save"))
@@ -189,11 +202,16 @@ class Main(QMainWindow, Ui_MainWindow):
         self.HS_Para = self.hsParaDb.currentText()
         self.Ptsths_Para = self.ptsthsParaDb.currentText()
         self.Ptsths_Para_Model = self.ptsthsParaModelDb.currentText()
+        self.ptColorMapType = self.ptColorMapDb.currentText()
+        self.hsColorMapType = self.hsColorMapDb.currentText()
 
         # Get the changed text in the drab bar
         self.hsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(1))
         self.ptsthsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(2))
         self.ptsthsParaModelDb.currentIndexChanged.connect(lambda: self.getProcessPara(3))
+
+        self.hsColorMapDb.currentIndexChanged.connect(lambda: self.getColorMapType(1))
+        self.ptColorMapDb.currentIndexChanged.connect(lambda: self.getColorMapType(2))
         
         # HS Parameters
         self.hsParaGeneBtn.clicked.connect(lambda: self.getHsPara("Gene"))
@@ -274,6 +292,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.HSI_wavelengths = self.HSI_info[4]
                 self.plant_mask = np.zeros((self.HSI_lines, self.HSI_samples), dtype=bool)
                 self.cur_proportion = 1
+                self.pixNum = self.HSI_lines * self.HSI_samples
 
                 index1 = self.rawSpeFile_path.rfind("/")  
                 index2 = self.rawSpeFile_path.find(".", index1)
@@ -332,6 +351,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.HSI_wavelengths= self.HSI_info[4]
                 self.plant_mask = np.zeros((self.HSI_lines, self.HSI_samples), dtype=bool)
                 self.cur_proportion = 1
+                self.pixNum = self.HSI_lines * self.HSI_samples
 
                 index1 = self.rawSpeFile_path.rfind("/")  
                 index2 = self.rawSpeFile_path.find(".", index1)
@@ -417,6 +437,20 @@ class Main(QMainWindow, Ui_MainWindow):
             case 4:
                 self.ampl_HighTH = int(combo_box.currentText())
     
+    def HSIAvg(self, index):
+        match index:
+            case 1:
+                pre_data = HSIpack.pre.Preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
+                level0 = pre_data.getLevel0()
+                self.HSI_info = level0[0] # Change the HSI_info into the averaging
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "光谱平均化处理成功")
+            case 2:
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "光谱平均化结果保存成功")   
+            case 3:
+                return
+            
     # Remove the background by NDVI
     def RmBg(self, function):
         match function:        
@@ -470,7 +504,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 level2 = pre_data.getLevel2()
                 self.HSI_info = level2[0]
                 self.cur_proportion = level2[3]
-                self.plantPixNum = self.cur_proportion * (self.HSI_lines * self.HSI_samples)
+                self.plantPixNum = self.cur_proportion * (self.pixNum)
                 level2_mask = level2[2]                
                 self.plant_mask = self.plant_mask | level2_mask
                 
@@ -537,6 +571,14 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.Ptsths_Para = combo_box.currentText()
             case 3:
                 self.Ptsths_Para_Model = combo_box.currentText()
+    
+    def getColorMapType(self, index):
+        combo_box = self.sender()
+        match index:
+            case 1:
+                self.hsColorMapType = combo_box.currentText()
+            case 2:
+                self.ptColorMapType = combo_box.currentText()
 
     def getHsPara(self, function):
         match function:
@@ -561,25 +603,32 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Save":
                 if not os.path.exists("Outputs/figures/" + self.fileName + "/process"):
                     os.makedirs("Outputs/figures/" + self.fileName + "/process")
-                self.pro_data.draw_pseudoColorImg("Save", 1)
+                self.pro_data.draw_pseudoColorImg("Save", 1, self.hsColorMapType)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "光谱指数计算结果保存成功")
 
             case "View":
-                self.pro_data.draw_pseudoColorImg("View", 1)
+                self.pro_data.draw_pseudoColorImg("View", 1, self.hsColorMapType)
 
     def getPtsthsPara(self, function):
         match function:
             case "Gene":
-                reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
-                self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName)
-                for i in range(self.plantPixNum):
-                    self.pro_data.CalcPhenotypeParas(i)
-                print("one figure processed successfully")
-                self.ptsthsSaveBtn.setEnabled(True)
-                self.ptsthsViewBtn.setEnabled(True)
-                if self.fileNum == 1:
-                    QtWidgets.QMessageBox.about(self, "", "光合表型参数计算成功")
+                try:
+                    self.PtMin = float(self.ptMinInput.text())
+                    self.PtMax = float(self.ptMaxInput.text())
+                    reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
+                    self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName, self.PtMin, self.PtMax)
+                    for i in range(self.pixNum):
+                        self.pro_data.CalcPhenotypeParas(i)
+                    print("one figure processed successfully")
+                    self.ptsthsSaveBtn.setEnabled(True)
+                    self.ptsthsViewBtn.setEnabled(True)
+                    if self.fileNum == 1:
+                        message = "光合表型参数计算成功\n通过阈值设定滤除了{}个像素点:".format(self.pro_data.count)
+                        QtWidgets.QMessageBox.about(self, "", message)
+
+                except ValueError:
+                    QtWidgets.QMessageBox.about(self, "", "请输入有效的阈值数字")
 
                 '''
                 self.progress_bar = QProgressBar(self)
@@ -595,12 +644,12 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Save":
                 if not os.path.exists("Outputs/figures/" + self.fileName + "/process"):
                     os.makedirs("Outputs/figures/" + self.fileName + "/process")
-                self.pro_data.draw_pseudoColorImg("Save", 2)
+                self.pro_data.draw_pseudoColorImg("Save", 2, self.ptColorMapType)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "光合表型参数计算结果保存成功")
 
             case "View":
-                self.pro_data.draw_pseudoColorImg("View", 2)
+                self.pro_data.draw_pseudoColorImg("View", 2, self.ptColorMapType)
     '''
     def calcLoop(self):
         count = 0
