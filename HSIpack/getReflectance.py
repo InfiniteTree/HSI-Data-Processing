@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 from scipy.interpolate import interp1d
+import seaborn as sns
 
 class Reflectance:
     HSI_info = []
@@ -248,4 +249,18 @@ class Reflectance:
             plt.savefig("Outputs/figures/" + self.fileName + "/preprocess/Reflectance_curve_new.jpg")
         elif saveFlag ==0:
             plt.show()
+    
+    def saveReflectJpg(self, filename, waveSelect):
+        sns.heatmap(np.array(self.ReflectMatrix)) # Bugs remain here!
+        # 添加标题和标签
+        plt.title('Pseudocolor Plot of Reflectance of the whole figure')
+        plt.xlabel('X-axis')
+        plt.ylabel('Y-axis')
+
+        # 显示伪彩图
+        plt.show()
+        file_path = "Outputs/figures/" + filename + "/preprocess/" + "reflectance.jpg"
+        plt.savefig(file_path)
+        return file_path
+
 

@@ -734,6 +734,40 @@ font: 12pt &quot;Agency FB&quot;;</string>
                         </property>
                        </spacer>
                       </item>
+                      <item>
+                       <widget class="QComboBox" name="numOfAvgDb">
+                        <item>
+                         <property name="text">
+                          <string>1</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>4</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>9</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>16</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>25</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>其他</string>
+                         </property>
+                        </item>
+                       </widget>
+                      </item>
                      </layout>
                     </item>
                     <item>
@@ -750,6 +784,9 @@ font: 12pt &quot;Agency FB&quot;;</string>
                       </item>
                       <item>
                        <widget class="QPushButton" name="HSIAvgSaveBtn">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
                         <property name="cursor">
                          <cursorShape>PointingHandCursor</cursorShape>
                         </property>
@@ -1184,6 +1221,39 @@ font: 12pt &quot;Agency FB&quot;;</string>
                        </widget>
                       </item>
                      </layout>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_46">
+                      <item>
+                       <widget class="QLabel" name="label_22">
+                        <property name="styleSheet">
+                         <string notr="true">Border:None;</string>
+                        </property>
+                        <property name="text">
+                         <string>请输入想要显示的波段:  (1-300)</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="reflectWaveSelectLineEdit"/>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="reflectShonBtn">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="cursor">
+                       <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="text">
+                       <string>显示</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_48"/>
                     </item>
                    </layout>
                   </widget>
@@ -1799,7 +1869,7 @@ font: 12pt &quot;Agency FB&quot;;</string>
                        </item>
                        <item>
                         <property name="text">
-                         <string>YIGn</string>
+                         <string>YlGn</string>
                         </property>
                        </item>
                        <item>

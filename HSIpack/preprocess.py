@@ -1,5 +1,6 @@
 import numpy as np
-from PIL import Image
+from scipy.signal import convolve
+import math
 
 class Preprocess:
     HSI_info = [] # shape = (n, k, m)
@@ -80,7 +81,10 @@ class Preprocess:
     # Get the Level1 HSI by calculating the avg spectra value due to the avg num range
     def getLevel0(self, avgRangeNum):
         # Use blur Filter to do the convolution
-        return
+        avgRangsqrt = int(math.sqrt(avgRangeNum))
+        kernel = np.ones((avgRangsqrt, 1, avgRangsqrt)) / avgRangeNum
+        self.HSI = convolve(self.HSI, kernel, mode='same') # Use convolving to do the blur filtering; defaultly, use zero-padding to deal with the edge
+        return self.HSI
 
     # Get the Level1 HSI by removing the background 
     def getLevel1(self):

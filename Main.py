@@ -42,6 +42,8 @@ class Main(QMainWindow, Ui_MainWindow):
     # Data recording for selection rectangular
     raw_scene = None
     dealt_scene = None
+    color_scene = None
+
     selecting = False
     selection_rect = None
     selection_start = None
@@ -73,7 +75,7 @@ class Main(QMainWindow, Ui_MainWindow):
     # NDVI_matrix
     NDVI = []
 
-    # Threshold value by set at the Tab2
+    # Threshold value by set at the Tab2 
     NDVI_TH_LOW = -1 # Threshold value of NDVI to seperate the plant from the background
     NDVI_TH_HIGH = 1 # Threshold value of NDVI to seperate the plant from the background
     ampl_LowTH = 0  # Threshold value of amplititude of the hyperspectra to eliminate
@@ -167,7 +169,10 @@ class Main(QMainWindow, Ui_MainWindow):
         self.NDVI_TH_LOW = float(self.bgNdviLowDb.currentText())
         self.ampl_LowTH = int(self.amplLowThDb.currentText())
         self.ampl_HighTH = int(self.amplHighThDb.currentText())
+        self.numOfAvg = int(self.numOfAvgDb.currentText())
+
         # Handle Selection Changed
+        self.numOfAvgDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(0))
         self.bgNdviHighDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(1))
         self.bgNdviLowDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(2))
         self.amplLowThDb.currentIndexChanged.connect(lambda: self.getPreProcessPara(3))
@@ -193,6 +198,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.RefGeneBtn.clicked.connect(lambda: self.getReflect("Gene"))
         self.RefViewBtn.clicked.connect(lambda: self.getReflect("View"))
         self.RefSaveBtn.clicked.connect(lambda: self.getReflect("Save"))
+
+        self.reflectShowBtn.clicked.connect(self.reflectShow)
 
         # Draw the reflectance curve
         self.RFCurveBtn.clicked.connect(self.RFCurveView)
@@ -301,7 +308,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 # Week amplititude detection
                 if np.max(self.HSI) < 1000:
                     QtWidgets.QMessageBox.warning(self, "", "高光谱原始数据亮度值过低！请重新导入")
-
                     return
                 # Unlock the view and Save function
                 if self.fileNum == 1:
@@ -428,6 +434,8 @@ class Main(QMainWindow, Ui_MainWindow):
     def getPreProcessPara(self, index):
         combo_box = self.sender()
         match index:
+            case 0:
+                self.numOfAvg = int(self.numOfAvgDb.currentText())
             case 1:
                 self.NDVI_TH_HIGH = float(combo_box.currentText())
             case 2:
@@ -441,15 +449,27 @@ class Main(QMainWindow, Ui_MainWindow):
         match index:
             case 1:
                 pre_data = HSIpack.pre.Preprocess(self.HSI_info, self.NDVI_TH_LOW, self.NDVI_TH_HIGH, self.ampl_LowTH, self.ampl_HighTH, self.cur_proportion, self.plant_mask)
-                level0 = pre_data.getLevel0()
-                self.HSI_info = level0[0] # Change the HSI_info into the averaging
+                level0 = pre_data.getLevel0(self.numOfAvg)
+                self.HSI = level0 # Change the HSI_info into the averaging
+                self.HSI_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.HSI, self.HSI_wavelengths]
+                self.HSIAvgSaveBtn.setEnabled(True)
+                self.HSIAvgViewBtn.setEnabled(True)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "光谱平均化处理成功")
             case 2:
+                l0_rgbimg = HSIpack.rd.drawImg(self.HSI_info)
+                self.l0_rgbimg_path = "Outputs/figures/"+ self.fileName + "/preprocess/level0.jpg"
+                l0_rgbimg.save(self.l0_rgbimg_path)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "光谱平均化结果保存成功")   
             case 3:
-                return
+                frame = QImage(self.l0_rgbimg_path)
+                pix = QPixmap.fromImage(frame)
+                item = QGraphicsPixmapItem(pix)
+                # the rgb scene in Tab1
+                self.dealt_scene = QGraphicsScene()
+                self.dealt_scene.addItem(item)
+                self.hsidealtViewBox.setScene(self.dealt_scene)
             
     # Remove the background by NDVI
     def RmBg(self, function):
@@ -548,7 +568,7 @@ class Main(QMainWindow, Ui_MainWindow):
             case "Save":
                 self.reflect.visualizeReflect(1)
                 if self.fileNum == 1:
-                    QtWidgets.QMessageBox.about(self, "", "植物平均反射率曲线保存成功")
+                    QtWidgets.QMessageBox.about(self, "", "植物平均反射率曲线保存成功\n植物反射率彩图保存成功")
             
             case "View":
                 self.reflect.visualizeReflect(0)
@@ -558,8 +578,24 @@ class Main(QMainWindow, Ui_MainWindow):
         self.view.show()
 
     def RFCurveView(self):
-        self.view = RFCurve(self.raw_scene)
+        self.view = RFCurve(self.dealt_scene)
         self.view.show()
+
+    def reflectShow(self):
+        try:
+            waveSelect = int(self.reflectWaveSelectLineEdit.text())
+            self.reflectjpgFile_path = self.reflect.saveReflectJpg(self.fileName, waveSelect)
+            frame = QImage(self.reflectjpgFile_path)
+            pix = QPixmap.fromImage(frame)
+            item = QGraphicsPixmapItem(pix)
+            # the rgb scene in Tab1
+            self.dealt_scene = QGraphicsScene()
+            self.dealt_scene.addItem(item)
+            self.hsidealtViewBox.setScene(self.dealt_scene)
+
+        except:
+            QtWidgets.QMessageBox.about(self, "", "请输入1-300之间的任意整数!")
+
 
     # ----------------------------Tab3-----------------------------
     def getProcessPara(self, index):
