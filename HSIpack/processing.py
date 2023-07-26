@@ -48,7 +48,7 @@ class Process:
     # map_num = ("wavelengh" - 400) / ((waveEnd - waveStart) / channels) 
     map_band = {"band430":16, "band445":22, "band500":47, "band510":51,"band531":62, "band550":70, "band570":80, "band635":110, "band670":126, "band680":131, "band700":139, "band705":143, "band750":164,"band780":178, "band800":188, "band900":235,"band970":268}
     
-    def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType, plant_mask, filename, PtParaMatrixValMin, PtParaMatrixValMax):
+    def __init__(self, reflectInfo, hsParaType, phenotypeParaType, phenotypeParaModelType, plant_mask, filename, ParaMatrixValMin, ParaMatrixValMax):
         self.Reflect_Info = reflectInfo
         self.hsPara = hsParaType
         self.phenotypePara = phenotypeParaType
@@ -63,8 +63,8 @@ class Process:
         self.plant_mask = plant_mask
         self.ParaMatrix = np.zeros((self.lines, self.samples))
         self.filename = filename
-        self.PtMin = PtParaMatrixValMin 
-        self.PtMax = PtParaMatrixValMax
+        self.ValueMin = ParaMatrixValMin 
+        self.ValueMax = ParaMatrixValMax
 
         # Make a bounding box to show the plant graph only
         rows, cols = np.nonzero(~self.plant_mask)
@@ -318,7 +318,7 @@ class Process:
                     plt.show()
             
             case 2:
-                im = ax.imshow(cropped_image, cmap=colorMapType,interpolation='nearest', vmin=self.PtMin, vmax=self.PtMax) # bug! need to be reset here
+                im = ax.imshow(cropped_image, cmap=colorMapType,interpolation='nearest', vmin=self.ValueMin, vmax=self.ValueMax) # bug! need to be reset here
                 ax.set_title("Pseudo_Color Map of the Relative Values on " + self.phenotypePara, y=1.05)
                 cbar = fig.colorbar(im)
                 if op_flag == "Save": 
@@ -381,7 +381,7 @@ class Process:
 
     # export file to store the Parameters of Phenotype in terms of the single plot
     def exportHsParas(self, filename,idx):
-        FirstRow = ["photoIdx","NDVI","OSAVI", "PSSRa","PSSRb", "PRI","MTVI2","SR", "DVI", "SIPI", "PSRI", "CRI1", "CRI2", "ARI1", "ARI2", "WBI"]
+        FirstRow = ["photoIdx","fileName", "NDVI","OSAVI", "PSSRa","PSSRb", "PRI","MTVI2","SR", "DVI", "SIPI", "PSRI", "CRI1", "CRI2", "ARI1", "ARI2", "WBI"]
         # if self.hsPara not in self.FirstRow:
         # Export the results
         # csv_folder = os.path.dirname(os.path.abspath(filename))
@@ -394,7 +394,8 @@ class Process:
                 writer.writerow(FirstRow)
             meanHsPara = [] # initialize
             meanHsPara.append(idx)
-            for j in range(len(FirstRow)-1):
+            meanHsPara.append(self.filename[:-4])
+            for j in range(len(FirstRow)-2):
                 self.hsPara = FirstRow[j+1]
                 self.calcHsParas()
                 non_zero_matrix = self.ParaMatrix[self.ParaMatrix != 0]
@@ -403,7 +404,7 @@ class Process:
         # subprocess.run(['start', '', csv_folder], shell=True)
 
     def exportPhenotypeParas(self, filename, idx):
-        FirstRow = ["Idx","file","SPAD", "A1200", "N", "Ca", "Cb"]
+        FirstRow = ["Idx","fileName","SPAD", "A1200", "N", "Ca", "Cb"]
         # if self.hsPara not in self.FirstRow:
         # Export the results
         # csv_folder = os.path.dirname(os.path.abspath(filename))
@@ -417,7 +418,7 @@ class Process:
             dataRow = [] # initialize
             dataRow.append(idx)
             dataRow.append(self.filename[:-4])
-            for j in range(len(FirstRow)-1):
+            for j in range(len(FirstRow)-2):
                 if self.phenotypeParaModel == "PLSR":
                     data = pd.read_csv("model/LearningData/TrainData.csv")
                     #print("Dataset of Train Model loaded...")

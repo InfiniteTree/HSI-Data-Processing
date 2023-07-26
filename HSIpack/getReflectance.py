@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import csv
 from scipy.interpolate import interp1d
 import seaborn as sns
@@ -26,10 +27,12 @@ class Reflectance:
         self.b = b
         self.plantMask = plant_mask
         self.fileName = filename
+        self.lines = self.HSI_info[0]
+        self.channels = self.HSI_info[1]
+        self.samples = self.HSI_info[2]
 
 
     def getReferAmplititudes(self, BRF_flag):
-        channels = self.HSI_info[1]
         HSI = self.HSI_info[3]
         #positionRange  i.e. (860,83),(890,120) for 3% Ref Board
         Amplititudes = []
@@ -38,7 +41,7 @@ class Reflectance:
         elif BRF_flag == "30":
              RefHSI = HSI[self.BRF_positionRange[1][0][1]:self.BRF_positionRange[1][1][1],:,self.BRF_positionRange[1][0][0]:self.BRF_positionRange[1][1][0]]
 
-        for i in range(channels):
+        for i in range(self.channels):
             Amplititudes.append(np.array(RefHSI[:,i,:]).mean())
 
         return Amplititudes
@@ -251,16 +254,19 @@ class Reflectance:
             plt.show()
     
     def saveReflectJpg(self, filename, waveSelect):
-        sns.heatmap(np.array(self.ReflectMatrix)) # Bugs remain here!
-        # 添加标题和标签
-        plt.title('Pseudocolor Plot of Reflectance of the whole figure')
-        plt.xlabel('X-axis')
-        plt.ylabel('Y-axis')
-
-        # 显示伪彩图
-        plt.show()
+        cmap_defined = mcolors.LinearSegmentedColormap.from_list('custom_cmap', [(0, 'black'), (1, 'white')])
+        #sns.heatmap(np.array(self.ReflectMatrix[:, waveSelect, :]), cmap=cmap_defined, vmin=0, vmax=1, cbar=False, extent=[0, self.lines, 0, self.samples]) # Bugs remain here!
+        plt.imshow(np.array(self.ReflectMatrix[:, waveSelect, :]), cmap=cmap_defined, vmin=0, vmax=1, extent=[0, self.samples, 0, self.lines])
+        plt.axis('off')
+        plt.colorbar(shrink=0.3)
+        #plt.gca().set_aspect('auto') # set the figure as auto
+        plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        plt.margins(0, 0)
+        #plt.title('Pseudocolor Plot of Reflectance of the whole figure')
+        #plt.show()
         file_path = "Outputs/figures/" + filename + "/preprocess/" + "reflectance.jpg"
-        plt.savefig(file_path)
+        plt.savefig(file_path, bbox_inches='tight')
+        plt.close()
         return file_path
 
 
