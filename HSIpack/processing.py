@@ -34,8 +34,8 @@ class Process:
     min_col_f = 0
     max_col_f = lines
 
-    PtMin = 0
-    PtMax = 0
+    ValueMin = 0
+    ValueMax = 0
 
     count = 0 # temp value
 
@@ -345,7 +345,8 @@ class Process:
                     self.ParaMatrix[row_t, col_t] = 0
                 
                 # handle fault value; any reason that produce them???
-                if self.ParaMatrix[row_t, col_t] < self.PtMin or self.ParaMatrix[row_t, col_t] > self.PtMax:
+                if self.ParaMatrix[row_t, col_t] < self.ValueMin or self.ParaMatrix[row_t, col_t] > self.ValueMax:
+              
                     self.count += 1
                     self.ParaMatrix[row_t, col_t] = 0
 

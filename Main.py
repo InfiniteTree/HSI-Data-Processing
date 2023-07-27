@@ -204,6 +204,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.RefGeneBtn.clicked.connect(lambda: self.getReflect("Gene"))
         self.RefViewBtn.clicked.connect(lambda: self.getReflect("View"))
         self.RefSaveBtn.clicked.connect(lambda: self.getReflect("Save"))
+        self.RefGeneBtn_2.clicked.connect(lambda: self.getReflect("Gene"))
+        
 
         self.reflectShowBtn.clicked.connect(self.reflectShow)
 
@@ -313,7 +315,11 @@ class Main(QMainWindow, Ui_MainWindow):
                 index1 = self.rawSpeFile_path.rfind("/")  
                 index2 = self.rawSpeFile_path.find(".", index1)
                 self.fileName = self.rawSpeFile_path[index1+1: index2]
-                
+
+                if not os.path.exists("Outputs/figures/"+ self.fileName):
+                    os.makedirs("Outputs/figures/"+ self.fileName)
+                if not os.path.exists("Outputs/results/" + self.fileName):
+                    os.makedirs("Outputs/results/" + self.fileName)
 
                 # Unlock the view and Save function
                 if self.fileNum == 1:
@@ -324,14 +330,9 @@ class Main(QMainWindow, Ui_MainWindow):
 
                 elif self.fileNum > 1:
                     self.multiViewBtn.setEnabled(True)
-                    
-            
+                                
             case "Save":
                 if self.rawSpeFile_path != "":
-                    if not os.path.exists("Outputs/figures/"+ self.fileName):
-                        os.makedirs("Outputs/figures/"+ self.fileName)
-                    if not os.path.exists("Outputs/results/" + self.fileName):
-                        os.makedirs("Outputs/results/" + self.fileName)
                     self.rgbImg = HSIpack.rd.drawImg(self.HSI_info)
                     self.rgbImg.save("Outputs/figures/" + self.fileName + "/raw.jpg")
 
@@ -373,7 +374,10 @@ class Main(QMainWindow, Ui_MainWindow):
                 index1 = self.rawSpeFile_path.rfind("/")  
                 index2 = self.rawSpeFile_path.find(".", index1)
                 self.fileName = self.rawSpeFile_path[index1+1: index2]
-
+                if not os.path.exists("Outputs/figures/BRF"):
+                    os.makedirs("Outputs/figures/BRF")
+                if not os.path.exists("Outputs/results/BRF"):
+                    os.makedirs("Outputs/results/BRF")
 
                 # Unlock the view and Save function
                 self.BRFRawViewBtn.setEnabled(True)
@@ -386,16 +390,12 @@ class Main(QMainWindow, Ui_MainWindow):
                 if self.BRFSpeFile_path != "":
                     self.rgbImg = HSIpack.rd.drawImg(self.HSI_info)
                     # Handle multiple files saving
-                    if not os.path.exists("Outputs/figures/BRF"):
-                        os.makedirs("Outputs/figures/BRF")
-                    if not os.path.exists("Outputs/results/BRF"):
-                        os.makedirs("Outputs/results/BRF")
                     self.rgbImg.save("Outputs/figures/BRF/rawBRF.jpg")
 
                     QtWidgets.QMessageBox.about(self, "", "高光谱反射板可视化保存成功")
 
             case "View":
-                if self.BRFSpeFile_path != "":                     
+                try:                    
                     self.rawjpgFile_path = "Outputs/figures/BRF/rawBRF.jpg"
                     frame = QImage(self.rawjpgFile_path)
                     pix = QPixmap.fromImage(frame)
@@ -409,6 +409,8 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.selectBox3Btn.setEnabled(True)
                     self.selectBox30Btn.setEnabled(True)
                     self.HSCurveBtn.setEnabled(True)
+                except:
+                    QtWidgets.QMessageBox.about(self, "", "未检测到原始数据处理结果\n请先进行保存")
 
     # Need to re select
     def selectBox(self, brf_flag):
@@ -456,7 +458,33 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.ampl_LowTH = int(combo_box.currentText())
             case 4:
                 self.ampl_HighTH = int(combo_box.currentText())
-    
+
+    # Calculate the reflectance
+    def getReflect(self, function):
+        match function:        
+            case "Gene":
+                self.reflect = HSIpack.gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b, self.plant_mask, self.fileName)
+                self.reflect.getReflect()
+                # Unlock the view and Save function
+                self.RefViewBtn.setEnabled(True)
+                self.RefSaveBtn.setEnabled(True)
+                self.RFCurveBtn.setEnabled(True)
+                self.reflectShowBtn.setEnabled(True)
+                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
+                if not os.path.exists("Outputs/results/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/results/"+ self.fileName + "/preprocess")
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "反射率校准处理成功")
+           
+            case "Save":
+                self.reflect.visualizeReflect(1)
+                if self.fileNum == 1:
+                    QtWidgets.QMessageBox.about(self, "", "植物平均反射率曲线保存成功\n植物反射率彩图保存成功")
+            
+            case "View":
+                self.reflect.visualizeReflect(0)  
+
     def HSIAvg(self, index):
         match index:
             case 1:
@@ -471,10 +499,7 @@ class Main(QMainWindow, Ui_MainWindow):
             case 2:
                 l0_rgbimg = HSIpack.rd.drawImg(self.HSI_info)
                 self.l0_rgbimg_path = "Outputs/figures/"+ self.fileName + "/preprocess/level0.jpg"
-                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
-                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
-                if not os.path.exists("Outputs/results/"+ self.fileName + "/preprocess"):
-                    os.makedirs("Outputs/results/"+ self.fileName + "/preprocess")
+
                 l0_rgbimg.save(self.l0_rgbimg_path)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "光谱平均化结果保存成功")   
@@ -499,22 +524,16 @@ class Main(QMainWindow, Ui_MainWindow):
                 level1_mask = level1[4]
                 self.plant_mask = self.plant_mask | level1_mask
                 self.plantPixNum = np.count_nonzero(~self.plant_mask)
-
                 # Unlock the view and Save function
                 self.RmBgViewBtn.setEnabled(True)
                 self.RmBgSaveBtn.setEnabled(True)
-
-                
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "去除非植物部分背景成功")
             
             case "Save":
                 l1_rgbimg = HSIpack.rd.drawImg(self.HSI_info)
                 self.l1_rgbimg_path = "Outputs/figures/"+ self.fileName + "/preprocess/level1.jpg"
-                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
-                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
-                if not os.path.exists("Outputs/results/"+ self.fileName + "/preprocess"):
-                    os.makedirs("Outputs/results/"+ self.fileName + "/preprocess")
+
                 l1_rgbimg.save(self.l1_rgbimg_path)
                 if self.fileNum == 1:
                     QtWidgets.QMessageBox.about(self, "", "可视化保存成功")
@@ -549,7 +568,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.plantPixNum = self.cur_proportion * (self.pixNum)
                 level2_mask = level2[2]                
                 self.plant_mask = self.plant_mask | level2_mask
-                
                 # Unlock the view and Save function
                 self.RmDbViewBtn.setEnabled(True)
                 self.RmDbSaveBtn.setEnabled(True)
@@ -557,11 +575,6 @@ class Main(QMainWindow, Ui_MainWindow):
                     QtWidgets.QMessageBox.about(self, "", "去除过暗过曝成功")
 
             case "Save":
-                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
-                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
-                if not os.path.exists("Outputs/results/"+ self.fileName + "/preprocess"):
-                    os.makedirs("Outputs/results/"+ self.fileName + "/preprocess")
-
                 l2_rgbImg = HSIpack.rd.drawImg(self.HSI_info)
                 self.l2_rgbimg_path = "Outputs/figures/"+ self.fileName + "/preprocess/level2.jpg"
                 l2_rgbImg.save(self.l2_rgbimg_path)
@@ -576,28 +589,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.dealt_scene = QGraphicsScene()
                 self.dealt_scene.addItem(item)
                 self.hsidealtViewBox.setScene(self.dealt_scene)
-    
-    # Calculate the reflectance
-    def getReflect(self, function):
-        match function:        
-            case "Gene":
-                self.reflect = HSIpack.gr.Reflectance(self.HSI_info, self.cur_proportion, [self.BRF3_pos_range, self.BRF30_pos_range], self.BRFfile_paths, self.k, self.b, self.plant_mask, self.fileName)
-                self.reflect.getReflect()
-                # Unlock the view and Save function
-                self.RefViewBtn.setEnabled(True)
-                self.RefSaveBtn.setEnabled(True)
-                self.RFCurveBtn.setEnabled(True)
-                self.reflectShowBtn.setEnabled(True)
-                if self.fileNum == 1:
-                    QtWidgets.QMessageBox.about(self, "", "反射率校准处理成功")
-           
-            case "Save":
-                self.reflect.visualizeReflect(1)
-                if self.fileNum == 1:
-                    QtWidgets.QMessageBox.about(self, "", "植物平均反射率曲线保存成功\n植物反射率彩图保存成功")
-            
-            case "View":
-                self.reflect.visualizeReflect(0)
 
     def HSCurveView(self):
         self.view = HSCurve(self.raw_scene)
@@ -688,12 +679,8 @@ class Main(QMainWindow, Ui_MainWindow):
         match function:
             case "Gene":
                 try:
-                    try:
-                        self.PtMin = float(self.ptMinInput.text())
-                        self.PtMax = float(self.ptMaxInput.text())
-                    except:
-                        pass
-
+                    self.PtMin = float(self.ptMinInput.text())
+                    self.PtMax = float(self.ptMaxInput.text())
                     reflect_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.reflect.ReflectMatrix, self.HSI_wavelengths, self.cur_proportion]
                     self.pro_data = HSIpack.pro.Process(reflect_info, self.Hs_Para, self.Ptsths_Para, self.Ptsths_Para_Model, self.plant_mask, self.fileName, self.PtMin, self.PtMax)
                     for i in range(self.pixNum):

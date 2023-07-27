@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['main.py'],
+    ['MH.ico', 'main.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -28,7 +28,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='main',
+    name='MH',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
