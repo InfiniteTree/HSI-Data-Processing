@@ -1434,6 +1434,11 @@ font: 12pt &quot;Agency FB&quot;;</string>
                     <widget class="QComboBox" name="hsParaDb">
                      <item>
                       <property name="text">
+                       <string/>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
                        <string>NDVI</string>
                       </property>
                      </item>
@@ -1546,98 +1551,6 @@ font: 12pt &quot;Agency FB&quot;;</string>
                  </item>
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_31">
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_47">
-                     <item>
-                      <widget class="QLabel" name="label_23">
-                       <property name="statusTip">
-                        <string notr="true"/>
-                       </property>
-                       <property name="styleSheet">
-                        <string notr="true">Border:None;</string>
-                       </property>
-                       <property name="text">
-                        <string>伪彩图颜色样式</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QComboBox" name="hsColorMapDb">
-                       <property name="iconSize">
-                        <size>
-                         <width>20</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                       <item>
-                        <property name="text">
-                         <string>hot</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>viridis</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>gray</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>spring</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>summer</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>magma</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>jet</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>plasma</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>prism</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>pink</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string>copper</string>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </item>
-                       <item>
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </item>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
                    <item>
                     <widget class="QPushButton" name="hsParaGeneBtn">
                      <property name="cursor">

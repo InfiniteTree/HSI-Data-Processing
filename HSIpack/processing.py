@@ -113,6 +113,7 @@ class Process:
                 # All range in [-1, 1], while plant in [0.2, 0.8]
                 self.ParaMatrix[self.ParaMatrix < 0] = 0
                 self.ParaMatrix[self.ParaMatrix > 1] = 0
+
                 
             case "OSAVI":
                 numerator =  (1+0.16) * (self.ReflectMatrix[:,self.map_band["band800"],:] - self.ReflectMatrix[:,self.map_band["band670"],:])
@@ -252,6 +253,8 @@ class Process:
         #self.ParaMatrix[self.ParaMatrix > 1] = 1
 
         #print(self.ParaMatrix)
+        self.ParaMatrix[self.ParaMatrix < self.ValueMin] = self.ValueMin
+        self.ParaMatrix[self.ParaMatrix < self.ValueMax] = self.ValueMax
 
     def draw_pseudoColorImg(self, op_flag, para_flag, colorMapType):
         #print(self.ParaMatrix)

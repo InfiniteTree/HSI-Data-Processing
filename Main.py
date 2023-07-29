@@ -218,14 +218,14 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Ptsths_Para = self.ptsthsParaDb.currentText()
         self.Ptsths_Para_Model = self.ptsthsParaModelDb.currentText()
         self.ptColorMapType = self.ptColorMapDb.currentText()
-        self.hsColorMapType = self.hsColorMapDb.currentText()
+        #self.hsColorMapType = self.hsColorMapDb.currentText()
 
         # Get the changed text in the drab bar
         self.hsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(1))
         self.ptsthsParaDb.currentIndexChanged.connect(lambda: self.getProcessPara(2))
         self.ptsthsParaModelDb.currentIndexChanged.connect(lambda: self.getProcessPara(3))
 
-        self.hsColorMapDb.currentIndexChanged.connect(lambda: self.getColorMapType(1))
+        #self.hsColorMapDb.currentIndexChanged.connect(lambda: self.getColorMapType(1))
         self.ptColorMapDb.currentIndexChanged.connect(lambda: self.getColorMapType(2))
         
         # HS Parameters
