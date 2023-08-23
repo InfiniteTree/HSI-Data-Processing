@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QPointF, QTimer, QThread
 
 import sys
 import os
-import subprocess
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 #import threading
@@ -492,6 +492,10 @@ class Main(QMainWindow, Ui_MainWindow):
                 level0 = pre_data.getLevel0(self.numOfAvg)
                 self.HSI = level0 # Change the HSI_info into the averaging
                 self.HSI_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.HSI, self.HSI_wavelengths]
+                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
+                if not os.path.exists("Outputs/results/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/results/"+ self.fileName + "/preprocess")
                 self.HSIAvgSaveBtn.setEnabled(True)
                 self.HSIAvgViewBtn.setEnabled(True)
                 if self.fileNum == 1:
@@ -524,6 +528,10 @@ class Main(QMainWindow, Ui_MainWindow):
                 level1_mask = level1[4]
                 self.plant_mask = self.plant_mask | level1_mask
                 self.plantPixNum = np.count_nonzero(~self.plant_mask)
+                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
+                if not os.path.exists("Outputs/results/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/results/"+ self.fileName + "/preprocess")
                 # Unlock the view and Save function
                 self.RmBgViewBtn.setEnabled(True)
                 self.RmBgSaveBtn.setEnabled(True)
@@ -569,6 +577,10 @@ class Main(QMainWindow, Ui_MainWindow):
                 level2_mask = level2[2]                
                 self.plant_mask = self.plant_mask | level2_mask
                 # Unlock the view and Save function
+                if not os.path.exists("Outputs/figures/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/figures/"+ self.fileName + "/preprocess")
+                if not os.path.exists("Outputs/results/"+ self.fileName + "/preprocess"):
+                    os.makedirs("Outputs/results/"+ self.fileName + "/preprocess")
                 self.RmDbViewBtn.setEnabled(True)
                 self.RmDbSaveBtn.setEnabled(True)
                 if self.fileNum == 1:
@@ -849,6 +861,8 @@ class Main(QMainWindow, Ui_MainWindow):
                             self.HSI_info = [self.HSI_lines, self.HSI_channels, self.HSI_samples, self.HSI, self.HSI_wavelengths]
 
                         # get the preprocessed data
+                        self.getReflect("Gene")
+                        self.getReflect("Save")
                         # Level 1
                         self.RmDb("Gene")
                         self.RmDb("Save")
@@ -856,7 +870,7 @@ class Main(QMainWindow, Ui_MainWindow):
                         self.RmBg("Gene")
                         self.RmBg("Save")
                         self.getReflect("Gene")
-                        self.getReflect("Save")
+
 
                         # get the processed data
                         # Output the figure
@@ -891,12 +905,20 @@ class Main(QMainWindow, Ui_MainWindow):
 
             # To show the multiple files result 
             case "View":
+                # Bug exist here when the app is established
+                '''
                 try:
                     current_folder = os.path.abspath(os.path.dirname(__file__))
+                    print(current_folder)
                     output_folder = os.path.join(current_folder, "Outputs")
                     subprocess.run(['start', '', output_folder], shell=True)
                 except:
                     QtWidgets.QMessageBox.about(self, "", "未检测到处理数据结果")
+                '''
+                current_folder = os.getcwd()
+                output_folder = os.path.join(current_folder, "Outputs")
+                os.startfile(output_folder)
+
 
     def multiDelete(self):
         folder_path = "Outputs"
